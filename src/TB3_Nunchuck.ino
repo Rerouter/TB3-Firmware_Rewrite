@@ -1,4 +1,44 @@
 #include <Arduino.h>
+#include "WiiNunchuck3.h"
+
+extern float joy_x_axis;
+extern float joy_y_axis;
+extern float accel_x_axis;
+extern byte AUX_REV;
+extern byte AUX_ON;
+extern unsigned int joy_x_lock_count;
+extern unsigned int joy_y_lock_count;
+extern int c_button;
+extern int z_button;
+extern boolean C_Released;
+extern boolean Z_Released;
+extern boolean CZ_Released;
+extern int prev_joy_x_reading;
+extern int prev_joy_y_reading;
+extern int prev_accel_x_reading;
+
+extern uint16_t motorMoveSteps0;
+extern uint16_t motorMoveSteps1;
+extern uint16_t motorMoveSteps2;
+extern volatile boolean nextMoveLoaded;
+extern byte motorMoving;
+extern uint32_t feedrate_micros;
+extern const uint16_t PAN_MAX_JOG_STEPS_PER_SEC;
+extern const uint16_t TILT_MAX_JOG_STEPS_PER_SEC;
+extern uint16_t AUX_MAX_JOG_STEPS_PER_SEC;
+
+extern void set_target(float x, float y, float z);
+extern long calculate_feedrate_delay_2();
+
+
+int NCReadStatus = 0;           // control variable for NC error handling
+const bool DEBUG_NC = 0;
+int joy_x_axis_Offset;
+int joy_x_axis_Threshold;
+int joy_y_axis_Offset;
+int joy_y_axis_Threshold;
+int accel_x_axis_Offset;
+int accel_x_axis_Threshold;
 
 void calibrate_joystick(int tempx, int tempy)
 {
@@ -231,15 +271,11 @@ void applyjoymovebuffer_linear()
   prev_joy_y_reading = joy_y_axis;
   prev_accel_x_reading = accel_x_axis;
 
-  FloatPoint fp;
-  fp.x = 0.0;
-  fp.y = 0.0;
+  float x = joy_x_axis + current_steps.x;
+  float y = joy_y_axis + current_steps.y;
+  float z = accel_x_axis + current_steps.z;
 
-  fp.x = joy_x_axis + current_steps.x;
-  fp.y = joy_y_axis + current_steps.y;
-  fp.z = accel_x_axis + current_steps.z;
-
-  set_target(fp.x, fp.y, fp.z);
+  set_target(x, y, z);
   feedrate_micros = calculate_feedrate_delay_2();
 }
 

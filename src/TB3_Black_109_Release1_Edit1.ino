@@ -8,8 +8,8 @@ Main Program
 
 #include "TB3_Camera_Control.h"
 #include "TB3_IO_ISR.h"
-#include "WiiNunchuck3.h"
 #include "NHDLCD9.h"
+#include "WiiNunchuck3.h"
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
@@ -120,15 +120,14 @@ PGM_P const setup_str[] PROGMEM = {setup_0, setup_1, setup_2, setup_3, setup_4, 
 
 // Global Parameters
 const bool DEBUG = 0;       //
-#define DEBUG_MOTOR 0 //
-#define DEBUG_NC 0    //
-#define DEBUG_PANO 0
-#define DEBUG_GOTO 0
+const bool DEBUG_MOTOR = 0; //
+const bool DEBUG_PANO = 0;
+const bool DEBUG_GOTO = 0;
 #define POWERDOWN_LV false // set this to cause the TB3 to power down below 10 volts
 #define MAX_MOVE_POINTS 3
 #define VIDEO_FEEDRATE_NUMERATOR 375L // Set this for 42000L, or 375L for faster calc moves
-#define PAN_MAX_JOG_STEPS_PER_SEC 10000.0
-#define TILT_MAX_JOG_STEPS_PER_SEC 10000.0
+const uint16_t PAN_MAX_JOG_STEPS_PER_SEC = 10000;
+const uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
 // #define AUX_MAX_JOG_STEPS_PER_SEC 15000.0 //this is defined in the setup menu now.
 
 // Main Menu Ordering
@@ -265,7 +264,7 @@ byte PAUSE_ENABLED;         // 1=Pause Enabled, 0=Pause disabled
 boolean REVERSE_PROG_ORDER; // Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
 boolean MOVE_REVERSED_FOR_RUN = 0;
 unsigned int LCD_BRIGHTNESS_DURING_RUN; // 0 is off 8 is max
-unsigned int AUX_MAX_JOG_STEPS_PER_SEC; // value x 1000  20 is the top or 20000 steps per second.
+uint16_t AUX_MAX_JOG_STEPS_PER_SEC; // value x 1000  20 is the top or 20000 steps per second.
 byte AUX_REV;                           // 1=Aux Enabled, 2=Aux disabled
 
 // control variable, no need to store in EEPROM - default and setup during shot
@@ -309,21 +308,9 @@ int sequence_repeat_count = 0; // counter to hold variable for how many time we 
 // remote and interface variables
 
 float joy_x_axis;
-int joy_x_axis_Offset;
-int joy_x_axis_Bucket;
-int joy_x_axis_Threshold;
-int joy_x_axis_map;
-int speedx;
+
 float joy_y_axis;
-int joy_y_axis_Offset;
-int joy_y_axis_Bucket;
-int joy_y_axis_Threshold;
-int joy_y_axis_map;
-int speedy;
 float accel_x_axis;
-int accel_x_axis_Offset;
-int accel_x_axis_Bucket;
-int accel_x_axis_Threshold;
 
 int PanStepCount;
 int TiltStepCount;
@@ -341,12 +328,11 @@ int C_Button_Read_Count = 0;
 boolean C_Released = true;
 int Z_Button_Read_Count = 0;
 boolean Z_Released = true;
-int NCReadStatus = 0;           // control variable for NC error handling
 unsigned int NCReadMillis = 42; // frequency at which we read the nunchuck for moves  1000/24 = 42  1000/30 = 33
 long NClastread = 1000;         // control variable for NC reads cycles
 
 // Stepper Setup
-unsigned long feedrate_micros = 0;
+uint32_t feedrate_micros = 0;
 
 struct FloatPoint
 {

@@ -449,7 +449,7 @@ void button_actions_move_end()
       delay(1);
       NunChuckQuerywithEC();
       NunChuckjoybuttons();
-      if (Nunchuck.zbutton() == 1)
+      if (z_button)
       {
         progstep_backward();
       }
@@ -637,7 +637,7 @@ void button_actions_move_x(int Point)
       delay(1);
       NunChuckQuerywithEC();
       NunChuckjoybuttons();
-      if (Nunchuck.zbutton() == 1)
+      if (z_button)
       {
         progstep_backward();
       }
