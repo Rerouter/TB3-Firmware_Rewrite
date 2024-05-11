@@ -1,5 +1,19 @@
-#include <Arduino.h>
-#include <avr/interrupt.h>
+#include "TB3_IO_ISR.h"
+
+const uint8_t IO_2 = 2;               // drives middle of 2.5 mm connector on I/O port
+const uint8_t IO_3 = 3;                // drives tip of 2.5 mm connector on I/O port
+
+void setup_IO() {
+    // Setup of I/0 Pings Start with output of I/Oport
+  pinMode(IO_2, OUTPUT);
+  pinMode(IO_3, OUTPUT);
+
+  digitalWrite(IO_2, LOW);
+  digitalWrite(IO_3, LOW);
+
+  init_external_triggering();
+}
+
 
 void init_external_triggering()
 {

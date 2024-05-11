@@ -7,6 +7,7 @@ Main Program
 */
 
 #include "TB3_Camera_Control.h"
+#include "TB3_IO_ISR.h"
 #include "WiiNunchuck3.h"
 #include "NHDLCD9.h"
 
@@ -118,7 +119,7 @@ PGM_P const setup_str[] PROGMEM = {setup_0, setup_1, setup_2, setup_3, setup_4, 
                                    setup_81, setup_82, setup_83, setup_84, setup_85, setup_86, setup_87, setup_88, setup_89, setup_90};
 
 // Global Parameters
-#define DEBUG 0       //
+const bool DEBUG = 0;       //
 #define DEBUG_MOTOR 0 //
 #define DEBUG_NC 0    //
 #define DEBUG_PANO 0
@@ -184,8 +185,6 @@ PGM_P const setup_str[] PROGMEM = {setup_0, setup_1, setup_2, setup_3, setup_4, 
 #define MS1 A1
 #define MS2 A2
 #define MS3 A2
-#define IO_2 2                // drives middle of 2.5 mm connector on I/O port
-#define IO_3 3                // drives tip of 2.5 mm connector on I/O port
 #define CAMERA_PIN 12         // drives tip of 2.5 mm connector
 #define FOCUS_PIN 13          // drives  middle of 2.5mm connector
 #define STEPS_PER_DEG 444.444 // 160000 MS per 360 degees = 444.4444444
@@ -413,7 +412,7 @@ byte z_direction = 1;
 
 #define MOTOR_COUNT 4
 
-#define TIME_CHUNK 50
+const uint8_t TIME_CHUNK = 50;
 #define SEND_POSITION_COUNT 20000
 
 // update velocities 20 x second
@@ -663,12 +662,7 @@ void setup()
   digitalWrite(CAMERA_PIN, LOW);
   digitalWrite(FOCUS_PIN, LOW);
 
-  // Setup of I/0 Pings Start with output of I/Oport
-  pinMode(IO_2, OUTPUT);
-  pinMode(IO_3, OUTPUT);
-
-  digitalWrite(IO_2, LOW);
-  digitalWrite(IO_3, LOW);
+  setup_IO();
 
   pinMode(A0, INPUT); // this is for the voltage reading
 
@@ -742,11 +736,6 @@ void setup()
 
   // Setup Motors
   init_steppers();
-
-  // init_external_triggering();
-  pinMode(IO_3, INPUT);
-  digitalWrite(IO_3, HIGH);
-  attachInterrupt(1, cam_change, CHANGE);
 
 } // end of setup
 
