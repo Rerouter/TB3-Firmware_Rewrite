@@ -23,45 +23,44 @@
 /*                                                                                                    */
 /******************************************************************************************************/
 
-class NHDLCD9 : public SoftwareSerial {
+class NHDLCD9 : public SoftwareSerial
+{
 private:
-	int _bv[10];
-	int _ro[5];
-	void command(uint8_t);
+   int _bv[10];
+   int _ro[5];
+   void command(uint8_t);
 
 public:
-	NHDLCD9 ( int pin, int numRows, int numCols, int posBase=1 );
-   void setup ( int brightPcnt=100, boolean startEmpty=true );
+   NHDLCD9(int pin, int numRows, int numCols, int posBase = 1);
+   void setup(int brightPcnt = 100, boolean startEmpty = true);
 
-   void on ();
-   void off ();
+   void on();
+   void off();
 
-   void empty ();
+   void empty();
 
-   //void scrollLeft ();
-   //void scrollRight ();
+   // void scrollLeft ();
+   // void scrollRight ();
 
-   void bright ( int pcnt );
-   void oldbright ( int pcnt );
-   void contrast ( int contrastval );
-   void pos ( int row, int col );
+   void bright(int pcnt);
+   void oldbright(int pcnt);
+   void contrast(int contrastval);
+   void pos(int row, int col);
 
    void cursorUnderline();
    void cursorBlock();
-   void cursorOff ();
+   void cursorOff();
 
-	// shortcuts for printing at particular positions
-   void at ( int row, int col, char );
-   void at ( int row, int col, const char[] );
-   void at ( int row, int col, uint8_t );
-   void at ( int row, int col, int );
-   void at ( int row, int col, unsigned int );
-   void at ( int row, int col, long );
-   void at ( int row, int col, unsigned long );
-   void at ( int row, int col, long, int );
-   void at ( int row, int col, String );
-
+   // shortcuts for printing at particular positions
+   void at(int row, int col, char);
+   void at(int row, int col, const char[]);
+   void at(int row, int col, uint8_t);
+   void at(int row, int col, int);
+   void at(int row, int col, unsigned int);
+   void at(int row, int col, long);
+   void at(int row, int col, unsigned long);
+   void at(int row, int col, long, int);
+   void at(int row, int col, String);
 };
-
 
 #endif
