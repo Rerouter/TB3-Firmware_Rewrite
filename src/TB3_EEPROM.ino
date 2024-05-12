@@ -1,5 +1,4 @@
-#include <Arduino.h>
-#include <EEPROM.h>
+#include "TB3_EEPROM.h"
 
 unsigned long check_version()
 {
