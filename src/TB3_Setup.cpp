@@ -1,5 +1,4 @@
-#include <Arduino.h>
-#include "TB3_EEPROM.h"
+#include "TB3_Setup.h"
 
 void Setup_AUX_ON()
 {

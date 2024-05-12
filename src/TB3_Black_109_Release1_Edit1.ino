@@ -14,6 +14,7 @@ Main Program
 #include "TB3_Motor_Control.h"
 #include "TB3_EEPROM.h"
 #include "TB3_Stepper.h"
+#include "TB3_Setup.h"
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
