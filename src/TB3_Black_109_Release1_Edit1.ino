@@ -13,6 +13,7 @@ Main Program
 #include "Structs.h"
 #include "TB3_Motor_Control.h"
 #include "TB3_EEPROM.h"
+#include "TB3_Stepper.h"
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
@@ -128,7 +129,7 @@ const bool DEBUG_PANO = 0;
 const bool DEBUG_GOTO = 0;
 #define POWERDOWN_LV false // set this to cause the TB3 to power down below 10 volts
 const uint8_t MAX_MOVE_POINTS = 3;
-#define VIDEO_FEEDRATE_NUMERATOR 375L // Set this for 42000L, or 375L for faster calc moves
+const uint32_t VIDEO_FEEDRATE_NUMERATOR = 375; // Set this for 42000, or 375 for faster calc moves
 const uint16_t PAN_MAX_JOG_STEPS_PER_SEC = 10000;
 const uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
 // #define AUX_MAX_JOG_STEPS_PER_SEC 15000.0 //this is defined in the setup menu now.
@@ -179,11 +180,11 @@ const uint8_t MOTORS = 3;
 #define MOTOR0_STEP 5
 #define MOTOR1_STEP 6
 #define MOTOR2_STEP 7
-#define MOTOR0_DIR 8
-#define MOTOR1_DIR 9
-#define MOTOR2_DIR 10
-#define MOTOR_EN A3
-#define MOTOR_EN2 11
+const uint8_t MOTOR0_DIR = 8;
+const uint8_t MOTOR1_DIR = 9;
+const uint8_t MOTOR2_DIR = 10;
+const uint8_t MOTOR_EN = A3;
+const uint8_t MOTOR_EN2 = 11;
 const uint8_t MS1 = A1;
 const uint8_t MS2 = A2;
 const uint8_t MS3 = A2;
@@ -342,11 +343,6 @@ FloatPoint fp;
 FloatPoint current_steps;
 FloatPoint target_steps;
 FloatPoint delta_steps;
-
-// our direction vars
-byte x_direction = 1;
-byte y_direction = 1;
-byte z_direction = 1;
 
 // End setup of Steppers
 
