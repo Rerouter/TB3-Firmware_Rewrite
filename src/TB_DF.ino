@@ -75,6 +75,8 @@ void killSwitch()
 }
 #endif
 
+#include "TB3_Motor_Control.h"
+
 void DFSetup()
 {
 

@@ -10,6 +10,8 @@ Main Program
 #include "TB3_IO_ISR.h"
 #include "NHDLCD9.h"
 #include "WiiNunchuck3.h"
+#include "Structs.h"
+#include "TB3_Motor_Control.h"
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
@@ -124,7 +126,7 @@ const bool DEBUG_MOTOR = 0; //
 const bool DEBUG_PANO = 0;
 const bool DEBUG_GOTO = 0;
 #define POWERDOWN_LV false // set this to cause the TB3 to power down below 10 volts
-#define MAX_MOVE_POINTS 3
+const uint8_t MAX_MOVE_POINTS = 3;
 #define VIDEO_FEEDRATE_NUMERATOR 375L // Set this for 42000L, or 375L for faster calc moves
 const uint16_t PAN_MAX_JOG_STEPS_PER_SEC = 10000;
 const uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
@@ -134,15 +136,15 @@ const uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
 
 #define MENU_OPTIONS 8
 
-#define REG2POINTMOVE 0
-#define REV2POINTMOVE 1
-#define REG3POINTMOVE 2
-#define REV3POINTMOVE 3
-#define PANOGIGA 4
-#define PORTRAITPANO 5
-#define DFSLAVE 6
-#define SETUPMENU 7
-#define AUXDISTANCE 99
+const uint8_t REG2POINTMOVE = 0;
+const uint8_t REV2POINTMOVE = 1;
+const uint8_t REG3POINTMOVE = 2;
+const uint8_t REV3POINTMOVE = 3;
+const uint8_t PANOGIGA = 4;
+const uint8_t PORTRAITPANO = 5;
+const uint8_t DFSLAVE = 6;
+const uint8_t SETUPMENU = 7;
+const uint8_t AUXDISTANCE = 99;
 
 // Portrait Pano
 #define PanoArrayTypeOptions 5
@@ -166,13 +168,13 @@ const uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
 #define INPROG_STOPMOTION 99 // Manual Forward and Back
 
 // Interval Options
-#define VIDEO_INTVAL 2
-#define EXTTRIG_INTVAL 3
-#define MIN_INTERVAL_STATIC_GAP 3 // min gap between interval and static time
+const uint8_t VIDEO_INTVAL = 2;
+const uint8_t EXTTRIG_INTVAL = 3;
+const uint8_t MIN_INTERVAL_STATIC_GAP = 3; // min gap between interval and static time
 // #define STOPMOT //not used
 
 // TB3 section - Black or Orange Port Mapping for Step pins on Stepper Page
-#define MOTORS 3
+const uint8_t MOTORS = 3;
 #define MOTOR0_STEP 5
 #define MOTOR1_STEP 6
 #define MOTOR2_STEP 7
@@ -181,9 +183,9 @@ const uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
 #define MOTOR2_DIR 10
 #define MOTOR_EN A3
 #define MOTOR_EN2 11
-#define MS1 A1
-#define MS2 A2
-#define MS3 A2
+const uint8_t MS1 = A1;
+const uint8_t MS2 = A2;
+const uint8_t MS3 = A2;
 #define CAMERA_PIN 12         // drives tip of 2.5 mm connector
 #define FOCUS_PIN 13          // drives  middle of 2.5mm connector
 #define STEPS_PER_DEG 444.444 // 160000 MS per 360 degees = 444.4444444
@@ -334,12 +336,6 @@ long NClastread = 1000;         // control variable for NC reads cycles
 // Stepper Setup
 uint32_t feedrate_micros = 0;
 
-struct FloatPoint
-{
-  float x;
-  float y;
-  float z;
-};
 FloatPoint fp;
 
 FloatPoint current_steps;
@@ -436,8 +432,6 @@ const uint8_t TIME_CHUNK = 50;
 char txBuf[32];
 char *txBufPtr;
 
-#define TX_MSG_BUF_SIZE 16
-
 #define MSG_STATE_START 0
 #define MSG_STATE_CMD 1
 #define MSG_STATE_DATA 2
@@ -448,7 +442,6 @@ char *txBufPtr;
 /*
  * Command codes from user
  */
-#define USER_CMD_ARGS 40
 
 #define CMD_NONE 0
 #define CMD_HI 10
@@ -478,13 +471,6 @@ char *txBufPtr;
 #define MSG_JM 12
 #define MSG_IM 13
 
-struct UserCmd
-{
-  byte command;
-  byte argCount;
-  int32_t args[USER_CMD_ARGS];
-};
-
 /*
  * Message state machine variables.
  */
@@ -492,19 +478,6 @@ byte lastUserData;
 int msgState;
 int msgNumberSign;
 UserCmd userCmd;
-
-struct txMsg
-{
-  byte msg;
-  byte motor;
-};
-
-struct TxMsgBuffer
-{
-  txMsg buffer[TX_MSG_BUF_SIZE];
-  byte head;
-  byte tail;
-};
 
 TxMsgBuffer txMsgBuffer;
 
@@ -562,45 +535,6 @@ boolean hardStopRequested;
 byte sendPosition = 0;
 byte motorMoving = 0;
 byte toggleStep = 0;
-
-#define P2P_MOVE_COUNT 7
-
-struct Motor
-{
-  byte stepPin;
-  byte dirPin;
-
-  // pre-computed move
-  float moveTime[P2P_MOVE_COUNT];
-  int32_t movePosition[P2P_MOVE_COUNT];
-  float moveVelocity[P2P_MOVE_COUNT];
-  float moveAcceleration[P2P_MOVE_COUNT];
-
-  float gomoMoveTime[P2P_MOVE_COUNT];
-  int32_t gomoMovePosition[P2P_MOVE_COUNT];
-  float gomoMoveVelocity[P2P_MOVE_COUNT];
-  float gomoMoveAcceleration[P2P_MOVE_COUNT];
-
-  int currentMove;
-  float currentMoveTime;
-
-  volatile boolean dir;
-
-  int32_t position;
-  int32_t destination;
-
-  float maxVelocity;     // Orig - delete later
-  float maxAcceleration; // Orig - delete later
-
-  float moveMaxVelocity;     // Pass this into calculator for synchronized moves
-  float moveMaxAcceleration; // Pass this into calculator for synchronized moves
-
-  float jogMaxVelocity;     // replaced the original maxVelocity
-  float jogMaxAcceleration; // replaced the original maxAcceleration
-
-  uint16_t nextMotorMoveSteps;
-  float nextMotorMoveSpeed;
-};
 
 boolean maxVelLimit = false;
 
