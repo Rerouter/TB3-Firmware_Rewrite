@@ -39,13 +39,13 @@ void eeprom_write_final(int pos, byte &val, byte len)
   eeprom_saved(true);
 }
 
-void eeprom_write(int pos, unsigned int &val)
+void eeprom_write(int pos, uint16_t &val)
 {
   byte *p = (byte *)(void *)&val;
   eeprom_write_final(pos, *p, sizeof(int));
 }
 
-void eeprom_write(int pos, unsigned long &val)
+void eeprom_write(int pos, uint32_t &val)
 {
   byte *p = (byte *)(void *)&val;
   eeprom_write_final(pos, *p, sizeof(long));
@@ -78,20 +78,20 @@ void eeprom_read(int pos, byte &val)
   val = EEPROM.read(pos);
 }
 
-void eeprom_read(int pos, int &val)
+void eeprom_read(int pos, int16_t &val)
 {
   byte *p = (byte *)(void *)&val;
   eeprom_read(pos, *p, sizeof(int));
 }
 
-void eeprom_read(int pos, unsigned int &val)
+void eeprom_read(int pos, uint16_t &val)
 {
 
   byte *p = (byte *)(void *)&val;
   eeprom_read(pos, *p, sizeof(int));
 }
 
-void eeprom_read(int pos, unsigned long &val)
+void eeprom_read(int pos, uint32_t &val)
 {
 
   byte *p = (byte *)(void *)&val;

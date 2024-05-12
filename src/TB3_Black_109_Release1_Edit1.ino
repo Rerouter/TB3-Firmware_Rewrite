@@ -12,6 +12,7 @@ Main Program
 #include "WiiNunchuck3.h"
 #include "Structs.h"
 #include "TB3_Motor_Control.h"
+#include "TB3_EEPROM.h"
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
