@@ -1,6 +1,19 @@
-#include <Arduino.h>
-#include "TB3_Motor_Control.h"
-#include "TB3_LCD_Buttons.h"
+#include "TB3_InShootMenu.h"
+
+int Z_Button_Read_Count = 0;
+int C_Button_Read_Count = 0;
+unsigned int goto_shot = 0;
+unsigned long input_last_tm = 0;
+
+// In Program Menu Ordering
+const uint8_t INPROG_OPTIONS = 5; // up this when code for gotoframe
+
+const uint8_t INPROG_RESUME = 0;
+const uint8_t INPROG_RTS = 1;         // return to start
+const uint8_t INPROG_GOTO_END = 2;    // Go to end
+const uint8_t INPROG_GOTO_FRAME = 3;  // go to frame
+const uint8_t INPROG_INTERVAL = 4;    // Set Interval
+const uint8_t INPROG_STOPMOTION = 99; // Manual Forward and Back
 
 void Check_Prog() // this is a routine for the button presses in the program
 {

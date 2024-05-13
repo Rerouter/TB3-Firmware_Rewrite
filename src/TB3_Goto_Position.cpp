@@ -1,6 +1,4 @@
-#include <Arduino.h>
-#include "TB3_IO_ISR.h"
-#include "TB3_Motor_Control.h"
+#include "TB3_Goto_Position.h"
 
 void goto_position(int gotoshot_temp)
 {

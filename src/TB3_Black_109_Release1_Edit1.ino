@@ -18,6 +18,8 @@ Main Program
 #include "TB3_PANO.h"
 #include "TB3_LCD_Buttons.h"
 #include "TB3_Nunchuck.h"
+#include "TB3_InShootMenu.h"
+#include "TB3_Goto_Position.h"
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
@@ -43,16 +45,6 @@ const uint8_t PANOGIGA = 4;
 const uint8_t PORTRAITPANO = 5;
 
 const uint8_t AUXDISTANCE = 99;
-
-// In Program Menu Ordering
-#define INPROG_OPTIONS 5 // up this when code for gotoframe
-
-#define INPROG_RESUME 0
-#define INPROG_RTS 1         // return to start
-#define INPROG_GOTO_END 2    // Go to end
-#define INPROG_GOTO_FRAME 3  // go to frame
-#define INPROG_INTERVAL 4    // Set Interval
-#define INPROG_STOPMOTION 99 // Manual Forward and Back
 
 // Interval Options
 const uint8_t VIDEO_INTVAL = 2;
@@ -169,7 +161,6 @@ unsigned int program_progress_3PT = 1; // phase 1, phase 2
 unsigned long interval_tm = 0;         // mc time to help with interval comparison
 unsigned long interval_tm_last = 0;    // mc time to help with interval comparison
 unsigned int lcd_dim_tm = 10;
-unsigned long input_last_tm = 0;
 unsigned long diplay_last_tm = 0;
 unsigned int prompt_time = 500; // in ms for delays of instructions
 // unsigned int  prompt_time=350; // for faster debugging
@@ -178,7 +169,6 @@ int prompt_val;
 int reviewprog = 1;
 
 unsigned long start_delay_tm = 0; // ms timestamp to help with delay comparison
-unsigned int goto_shot = 0;
 
 int sequence_repeat_type = 1;  // 1 Defaults - Run Once, 0 Continuous Loop,  -1 Continuous Forward
 
@@ -199,9 +189,7 @@ unsigned int joy_x_lock_count = 0;
 int prev_accel_x_reading = 0;
 int CZ_Button_Read_Count = 0;
 boolean CZ_Released = true;
-int C_Button_Read_Count = 0;
 boolean C_Released = true;
-int Z_Button_Read_Count = 0;
 boolean Z_Released = true;
 unsigned int NCReadMillis = 42; // frequency at which we read the nunchuck for moves  1000/24 = 42  1000/30 = 33
 long NClastread = 1000;         // control variable for NC reads cycles
