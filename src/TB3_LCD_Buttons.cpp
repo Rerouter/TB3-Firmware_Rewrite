@@ -2103,7 +2103,7 @@ void Enter_Aux_Endpoint()
     first_time = 0;
   }
 
-  unsigned int aux_dist_last = aux_dist;
+  int aux_dist_last = aux_dist;
   NunChuckQuerywithEC();
   NunChuckjoybuttons();
 
