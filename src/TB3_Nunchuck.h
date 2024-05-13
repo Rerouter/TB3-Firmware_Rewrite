@@ -1,6 +1,21 @@
+#ifndef TB3NUNCHUCK_H
+#define TB3NUNCHUCK_H
+
 #include <Arduino.h>
 #include "WiiNunchuck3.h"
 #include "Structs.h"
+
+void calibrate_joystick(int tempx, int tempy);
+void NunChuckQuerywithEC();
+void NunChuckjoybuttons();
+void applyjoymovebuffer_exponential();
+void applyjoymovebuffer_linear();
+void nc_sleep();
+void axis_button_deadzone();
+void updateMotorVelocities2();
+
+#endif
+
 
 extern float joy_x_axis;
 extern float joy_y_axis;
@@ -36,12 +51,3 @@ extern uint16_t *motorAccumulator[];
 
 extern void set_target(float x, float y, float z);
 extern long calculate_feedrate_delay_2();
-
-void calibrate_joystick(int tempx, int tempy);
-void NunChuckQuerywithEC();
-void NunChuckjoybuttons();
-void applyjoymovebuffer_exponential();
-void applyjoymovebuffer_linear();
-void nc_sleep();
-void axis_button_deadzone();
-void updateMotorVelocities2();

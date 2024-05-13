@@ -1,6 +1,23 @@
+#ifndef TB3MOTOR_H
+#define TB3MOTOR_H
+
 #include <Arduino.h>
 #include "TB3_IO_ISR.h"
 #include "Structs.h"
+
+void move_motors();
+long motor_get_steps_2pt(int motor);
+long motor_get_steps_3pt(int motor);
+float catmullrom(float t, float p0, float p1, float p2, float p3);
+long motor_get_steps_2pt_video(int motor);
+void go_to_origin_max_speed();
+void go_to_origin_slow();
+void DisplayMove(int motorIndex);
+void go_to_start_old();
+void go_to_start_new();
+
+#endif
+
 
 extern unsigned int camera_fired;
 extern unsigned int keyframe[2][6];
@@ -56,15 +73,3 @@ extern void enable_AUX();
 extern void disable_PT();
 extern void disable_AUX();
 extern void draw(int array_num, int col, int row);
-
-
-void move_motors();
-long motor_get_steps_2pt(int motor);
-long motor_get_steps_3pt(int motor);
-float catmullrom(float t, float p0, float p1, float p2, float p3);
-long motor_get_steps_2pt_video(int motor);
-void go_to_origin_max_speed();
-void go_to_origin_slow();
-void DisplayMove(int motorIndex);
-void go_to_start_old();
-void go_to_start_new();

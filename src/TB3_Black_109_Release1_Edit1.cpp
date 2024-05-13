@@ -80,7 +80,7 @@ Phidgets 5:1	4955
 */
 
 uint16_t STEPS_PER_INCH_AUX = 19125;  //
-const uint16_t MAX_AUX_MOVE_DISTANCE = 311; //(31.1 inches)
+const int16_t MAX_AUX_MOVE_DISTANCE = 311; //(31.1 inches)
 // end TB3 section
 
 unsigned long build_version = 10951;    // this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
@@ -207,7 +207,7 @@ FloatPoint delta_steps;
 // End setup of Steppers
 
 // supported boards
-#define ARDUINO 1
+//#define ARDUINO 1
 #define ARDUINOMEGA 2
 
 // eMotimo TB3 - Set this PINOUT_VERSION 3 for TB3 Orange (Uno)

@@ -1,29 +1,12 @@
+#ifndef TB3BUTTONS_H
+#define TB3BUTTONS_H
+
 #include <Arduino.h>
 #include "TB3_Camera_Control.h"
 #include "TB3_IO_ISR.h"
 #include "TB3_Motor_Control.h"
 #include "TB3_EEPROM.h"
 #include "TB3_PANO.h"
-
-extern unsigned long Tilt_AOV_steps;
-extern const uint8_t PINOUT_VERSION;
-extern const uint16_t MAX_AUX_MOVE_DISTANCE;
-extern float joy_x_axis;
-extern float accel_x_axis;
-extern unsigned long Pan_AOV_steps;
-extern const uint8_t EXTTRIG_INTVAL;
-extern const uint8_t MIN_INTERVAL_STATIC_GAP;
-extern unsigned long start_delay_tm;
-extern int ext_shutter_count;
-extern boolean progstep_forward_dir;
-extern int CZ_Button_Read_Count;
-extern unsigned int joy_x_lock_count;
-//extern char lcdbuffer1[];
-extern uint16_t STEPS_PER_INCH_AUX;
-extern const uint8_t SETUPMENU;
-
-extern void DFloop();
-extern void Check_Prog();
 
 void Choose_Program();
 void button_actions_choose_program();
@@ -72,3 +55,26 @@ void draw(int array_num, int col, int row);
 void Enter_Aux_Endpoint();
 void DisplayAUX_Dist();
 void button_actions_Enter_Aux_Endpoint();
+
+#endif
+
+
+extern unsigned long Tilt_AOV_steps;
+extern const uint8_t PINOUT_VERSION;
+extern const int16_t MAX_AUX_MOVE_DISTANCE;
+extern float joy_x_axis;
+extern float accel_x_axis;
+extern unsigned long Pan_AOV_steps;
+extern const uint8_t EXTTRIG_INTVAL;
+extern const uint8_t MIN_INTERVAL_STATIC_GAP;
+extern unsigned long start_delay_tm;
+extern int ext_shutter_count;
+extern boolean progstep_forward_dir;
+extern int CZ_Button_Read_Count;
+extern unsigned int joy_x_lock_count;
+//extern char lcdbuffer1[];
+extern uint16_t STEPS_PER_INCH_AUX;
+extern const uint8_t SETUPMENU;
+
+extern void DFloop();
+extern void Check_Prog();

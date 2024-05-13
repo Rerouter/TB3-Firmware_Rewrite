@@ -1,6 +1,28 @@
+#ifndef TB3PANO_H
+#define TB3PANO_H
+
 #include <Arduino.h>
 #include "NHDLCD9.h"
 #include "Structs.h"
+
+void Set_angle_of_view();
+void Define_Overlap_Percentage();
+void Display_olpercentage();
+void button_actions_olpercentage();
+void Set_PanoArrayType();
+String steps_to_deg_decimal(unsigned long steps);
+void Pano_Review_Confirm();
+void pano_button_actions_review();
+void Pano_DisplayReviewProg();
+void move_motors_pano_basic();
+void move_motors_pano_accel();
+void move_motors_accel_array();
+void Move_to_Origin();
+void calc_pano_move();
+void button_actions290();
+
+#endif
+
 
 extern unsigned int first_time;
 extern byte AUX_ON;
@@ -70,19 +92,3 @@ extern void setupMotorMove(int motorIndex, int32_t destination);
 extern void updateMotorVelocities();
 extern void disable_PT();
 extern void display_status();
-
-void Set_angle_of_view();
-void Define_Overlap_Percentage();
-void Display_olpercentage();
-void button_actions_olpercentage();
-void Set_PanoArrayType();
-String steps_to_deg_decimal(unsigned long steps);
-void Pano_Review_Confirm();
-void pano_button_actions_review();
-void Pano_DisplayReviewProg();
-void move_motors_pano_basic();
-void move_motors_pano_accel();
-void move_motors_accel_array();
-void Move_to_Origin();
-void calc_pano_move();
-void button_actions290();

@@ -1,3 +1,8 @@
+#ifndef CAMERACONTROL_H
+#define CAMERACONTROL_H
+
+#include <Arduino.h>
+
 bool camera_shutter();
 
 void setup_camera();
@@ -12,3 +17,5 @@ void MsTimer2_start();
 void MsTimer2_overflow();
 
 void MsTimer3_stop();
+
+#endif

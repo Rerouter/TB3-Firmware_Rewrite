@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "TB3_Camera_Control.h"
 
 // Timer2flags
