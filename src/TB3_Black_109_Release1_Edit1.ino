@@ -20,6 +20,7 @@ Main Program
 #include "TB3_Nunchuck.h"
 #include "TB3_InShootMenu.h"
 #include "TB3_Goto_Position.h"
+#include "TB_DF.h"
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
@@ -54,9 +55,9 @@ const uint8_t MIN_INTERVAL_STATIC_GAP = 3; // min gap between interval and stati
 
 // TB3 section - Black or Orange Port Mapping for Step pins on Stepper Page
 const uint8_t MOTORS = 3;
-#define MOTOR0_STEP 5
-#define MOTOR1_STEP 6
-#define MOTOR2_STEP 7
+const uint8_t MOTOR0_STEP = 5;
+const uint8_t MOTOR1_STEP = 6;
+const uint8_t MOTOR2_STEP = 7;
 const uint8_t MOTOR0_DIR = 8;
 const uint8_t MOTOR1_DIR = 9;
 const uint8_t MOTOR2_DIR = 10;
@@ -205,10 +206,6 @@ FloatPoint delta_steps;
 
 // End setup of Steppers
 
-// Start of DF Vars
-#define DFMOCO_VERSION 1
-#define DFMOCO_VERSION_STRING "1.2.6"
-
 // supported boards
 #define ARDUINO 1
 #define ARDUINOMEGA 2
@@ -248,94 +245,26 @@ const uint8_t PINOUT_VERSION = 4;
     port &= ~pin;          \
   }
 
-#define MOTOR_COUNT 4
+const uint8_t MOTOR_COUNT = 4;
 
 const uint8_t TIME_CHUNK = 50;
 #define SEND_POSITION_COUNT 20000
 
-// update velocities 20 x second
-#define VELOCITY_UPDATE_RATE (50000 / TIME_CHUNK)
-#define VELOCITY_INC(maxrate) (max(1.0f, maxrate / 70.0f))
-
 // Start TB3 Black Port Mapping
 
-#define MOTOR0_STEP_PORT PORTE
-#define MOTOR0_STEP_PIN B00001000 // Pin 5 PE3
+uint8_t MOTOR0_STEP_PORT = PORTE;
+const uint8_t MOTOR0_STEP_PIN = B00001000; // Pin 5 PE3
 
-#define MOTOR1_STEP_PORT PORTH
-#define MOTOR1_STEP_PIN B00001000 // Pin  6 PH3
+uint8_t MOTOR1_STEP_PORT = PORTH;
+const uint8_t MOTOR1_STEP_PIN = B00001000; // Pin  6 PH3
 
-#define MOTOR2_STEP_PORT PORTH
-#define MOTOR2_STEP_PIN B00010000 // Pin 7 PH4
+uint8_t MOTOR2_STEP_PORT = PORTH;
+const uint8_t MOTOR2_STEP_PIN = B00010000; // Pin 7 PH4
 
-#define MOTOR3_STEP_PORT PORTC    //  Map this to pin 30 PC7 on the Mega board for debug
-#define MOTOR3_STEP_PIN B10000000 //
+uint8_t MOTOR3_STEP_PORT = PORTC;    //  Map this to pin 30 PC7 on the Mega board for debug
+const uint8_t MOTOR3_STEP_PIN = B10000000; //
 // End TB3 Black Port Mapping
 
-/**
- * Serial output specialization
- */
-#if defined(UBRRH)
-#define TX_UCSRA UCSRA
-#define TX_UDRE UDRE
-#define TX_UDR UDR
-#else
-#define TX_UCSRA UCSR0A
-#define TX_UDRE UDRE0
-#define TX_UDR UDR0
-#endif
-
-char txBuf[32];
-char *txBufPtr;
-
-#define MSG_STATE_START 0
-#define MSG_STATE_CMD 1
-#define MSG_STATE_DATA 2
-#define MSG_STATE_ERR 3
-
-#define MSG_STATE_DONE 100
-
-/*
- * Command codes from user
- */
-
-#define CMD_NONE 0
-#define CMD_HI 10
-#define CMD_MS 30
-#define CMD_NP 31
-#define CMD_MM 40 // move motor
-#define CMD_PR 41 // pulse rate
-#define CMD_SM 42 // stop motor
-#define CMD_MP 43 // motor position
-#define CMD_ZM 44 // zero motor
-#define CMD_SA 50 // stop all (hard)
-#define CMD_BF 60 // blur frame
-#define CMD_GO 61 // go!
-
-#define CMD_JM 70 // jog motor
-#define CMD_IM 71 // inch motor
-
-#define MSG_HI 01
-#define MSG_MM 02
-#define MSG_MP 03
-#define MSG_MS 04
-#define MSG_PR 05
-#define MSG_SM 06
-#define MSG_SA 07
-#define MSG_BF 10
-#define MSG_GO 11
-#define MSG_JM 12
-#define MSG_IM 13
-
-/*
- * Message state machine variables.
- */
-byte lastUserData;
-int msgState;
-int msgNumberSign;
-UserCmd userCmd;
-
-TxMsgBuffer txMsgBuffer;
 
 /*
  Motor data.
@@ -355,19 +284,6 @@ uint16_t *motorAccumulator[MOTOR_COUNT] =
 
 };
 
-uint16_t motorMoveSteps0;
-uint16_t motorMoveSteps1;
-uint16_t motorMoveSteps2;
-uint16_t motorMoveSteps3;
-
-uint16_t *motorMoveSteps[MOTOR_COUNT] =
-    {
-        &motorMoveSteps0,
-        &motorMoveSteps1,
-        &motorMoveSteps2,
-        &motorMoveSteps3,
-};
-
 uint16_t motorMoveSpeed0;
 uint16_t motorMoveSpeed1;
 uint16_t motorMoveSpeed2;
@@ -382,20 +298,25 @@ uint16_t *motorMoveSpeed[MOTOR_COUNT] =
 
 };
 
+
+uint16_t motorMoveSteps0;
+uint16_t motorMoveSteps1;
+uint16_t motorMoveSteps2;
+uint16_t motorMoveSteps3;
+
+uint16_t *motorMoveSteps[MOTOR_COUNT] =
+    {
+        &motorMoveSteps0,
+        &motorMoveSteps1,
+        &motorMoveSteps2,
+        &motorMoveSteps3,
+};
+
 volatile boolean nextMoveLoaded;
 
-unsigned int velocityUpdateCounter;
-byte sendPositionCounter;
-boolean hardStopRequested;
-
-byte sendPosition = 0;
 byte motorMoving = 0;
-byte toggleStep = 0;
 
 boolean maxVelLimit = false;
-
-boolean goMoReady;
-int goMoDelayTime;
 
 Motor motors[MOTOR_COUNT];
 

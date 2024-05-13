@@ -75,7 +75,92 @@ void killSwitch()
 }
 #endif
 
-#include "TB3_Motor_Control.h"
+#include "TB_DF.h"
+
+// update velocities 20 x second
+#define VELOCITY_UPDATE_RATE (50000 / TIME_CHUNK)
+#define VELOCITY_INC(maxrate) (max(1.0f, maxrate / 70.0f))
+
+/**
+ * Serial output specialization
+ */
+#if defined(UBRRH)
+#define TX_UCSRA UCSRA
+#define TX_UDRE UDRE
+#define TX_UDR UDR
+#else
+#define TX_UCSRA UCSR0A
+#define TX_UDRE UDRE0
+#define TX_UDR UDR0
+#endif
+
+boolean goMoReady;
+int goMoDelayTime;
+
+char txBuf[32];
+char *txBufPtr;
+
+// Start of DF Vars
+#define DFMOCO_VERSION 1
+#define DFMOCO_VERSION_STRING "1.2.6"
+
+byte toggleStep = 0;
+
+/*
+ * Message state machine variables.
+ */
+byte lastUserData;
+int msgState;
+int msgNumberSign;
+UserCmd userCmd;
+
+const uint8_t MSG_STATE_START = 0;
+const uint8_t MSG_STATE_CMD = 1;
+const uint8_t MSG_STATE_DATA = 2;
+const uint8_t MSG_STATE_ERR = 3;
+
+const uint8_t MSG_STATE_DONE = 100;
+
+unsigned int velocityUpdateCounter;
+byte sendPositionCounter;
+boolean hardStopRequested;
+
+byte sendPosition = 0;
+
+TxMsgBuffer txMsgBuffer;
+
+/*
+ * Command codes from user
+ */
+
+#define CMD_NONE 0
+#define CMD_HI 10
+#define CMD_MS 30
+#define CMD_NP 31
+#define CMD_MM 40 // move motor
+#define CMD_PR 41 // pulse rate
+#define CMD_SM 42 // stop motor
+#define CMD_MP 43 // motor position
+#define CMD_ZM 44 // zero motor
+#define CMD_SA 50 // stop all (hard)
+#define CMD_BF 60 // blur frame
+#define CMD_GO 61 // go!
+
+#define CMD_JM 70 // jog motor
+#define CMD_IM 71 // inch motor
+
+#define MSG_HI 01
+#define MSG_MM 02
+#define MSG_MP 03
+#define MSG_MS 04
+#define MSG_PR 05
+#define MSG_SM 06
+#define MSG_SA 07
+#define MSG_BF 10
+#define MSG_GO 11
+#define MSG_JM 12
+#define MSG_IM 13
+
 
 void DFSetup()
 {
