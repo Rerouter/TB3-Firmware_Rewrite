@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "TB3_Motor_Control.h"
+#include "TB3_LCD_Buttons.h"
 
 void Check_Prog() // this is a routine for the button presses in the program
 {

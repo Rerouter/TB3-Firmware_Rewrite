@@ -1,4 +1,4 @@
-#include <Arduino.h>
+#include "TB3_PANO.h"
 
 unsigned long motor_steps_pov[2][2]; // 2 total points.  Used for Pano Calcs and other hard targets
 unsigned long Pan_AOV_steps;
@@ -11,6 +11,17 @@ unsigned long total_shots_y;    // calulated value for to divide up scene evenly
 unsigned long total_pano_shots; // rows x columns for display
 long step_per_pano_shot_x;
 long step_per_pano_shot_y;
+
+// Portrait Pano
+const uint8_t PanoArrayTypeOptions = 5;
+
+const uint8_t PANO_9ShotCenter = 1;
+const uint8_t PANO_25ShotCenter = 3;
+const uint8_t PANO_7X3 = 2;
+const uint8_t PANO_9X5Type1 = 6;
+const uint8_t PANO_9X5Type2 = 7;
+const uint8_t PANO_5x5TopThird = 4;
+const uint8_t PANO_7X5TopThird = 5;
 
 // PORTRAITPANO Method Variables -  3x3, 7x3, 5x5 top third, 7x5 top third
 
@@ -391,7 +402,7 @@ void pano_button_actions_review()
     camera_fired = 0;              // reset the counter
     Program_Engaged = true;        // leave this for pano
     Interrupt_Fire_Engaged = true; // just to start off first shot immediately
-    lcd_backlight_cur = 100;
+
     first_time = 1;
     lcd.bright(20);
     if (P2PType == 1)
@@ -753,7 +764,6 @@ void button_actions290()
     delay(prompt_time);
     NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
     // lcd.bright(0); //run in dimmed mode
-    // lcd_backlight_cur= 0;
     break;
   }
 }

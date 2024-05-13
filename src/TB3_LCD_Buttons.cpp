@@ -1,7 +1,25 @@
-#include "TB3_Camera_Control.h"
-#include "TB3_IO_ISR.h"
-#include "TB3_Motor_Control.h"
-#include "TB3_EEPROM.h"
+#include "TB3_LCD_Buttons.h"
+
+const uint8_t DFSLAVE = 6;
+const uint8_t MENU_OPTIONS = 8;
+int prev_joy_x_reading = 0;
+int prev_joy_y_reading = 0;
+unsigned int video_sample_ms = 100;
+unsigned int video_segments = 150;  // arbitrary
+unsigned int max_shutter;
+int cursorpos = 1;                     // use 1 for left, 2 for right  - used for lead in, lead out
+boolean first_time2 = true;
+int sequence_repeat_count = 0; // counter to hold variable for how many time we have repeated
+
+boolean reset_prog = 1;              // used to handle program reset or used stored
+const boolean POWERDOWN_LV = false; // set this to cause the TB3 to power down below 10 volts
+int batt_low_cnt = 0;
+int aux_dist;
+
+// variables for display of remaining time
+int timeh;
+int timem;
+int time_s;
 
 /*
 
@@ -1509,7 +1527,6 @@ void button_actions_review()
       lcd.at(1, 1, "Waiting for Trig");
     }
 
-    // lcd_backlight_cur= 100;
     first_time = 1;
     lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
     break;
@@ -1703,7 +1720,6 @@ else if (intval==EXTTRIG_INTVAL)  { //manual trigger/ext trigge
      lcd.at(1,1,"Waiting for Trig");
   }
   */
-  // lcd_backlight_cur= 100;
   first_time = 1;
   lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
 
@@ -1789,6 +1805,7 @@ int joy_capture_4() // captures joystick input and conditions it for UI
     return (0);
   }
 }
+
 int joy_capture_x1() // captures joystick input
 {
   int returned_val = 0;
@@ -2049,7 +2066,7 @@ void display_time(int row, int col)
 
 void draw(int array_num, int col, int row)
 {
-
+  char lcdbuffer1[20]; // this used to be 16, but increased to 20 do to overflow when we moved to Arduino 1.6 (stalled and failed)
   strcpy_P(lcdbuffer1, (PGM_P)pgm_read_word(&(setup_str[array_num]))); // Necessary casts and dereferencing, just copy.
   lcd.at(col, row, lcdbuffer1);
 }

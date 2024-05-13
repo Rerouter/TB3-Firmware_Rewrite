@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "TB3_EEPROM.h"
 #include "NHDLCD9.h"
+#include "TB3_LCD_Buttons.h"
 
 extern long NClastread;
 extern int c_button;
