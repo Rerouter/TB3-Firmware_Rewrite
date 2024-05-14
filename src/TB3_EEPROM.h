@@ -5,22 +5,17 @@
 #include <EEPROM.h>
 #include "Structs.h"
 
-unsigned long check_version();
+unsigned int check_version();
 boolean eeprom_saved();
 void eeprom_saved(boolean saved);
 
-void eeprom_write_final(int pos, byte &val, byte len);
-void eeprom_write(int pos, byte &val);
-void eeprom_write(int pos, uint16_t &val);
-void eeprom_write(int pos, uint32_t &val);
-void eeprom_write(int pos, float &val);
+// Template function for writing data of any type to EEPROM
+template<typename T>
+void eeprom_write(int pos, const T& val);
 
-void eeprom_read(int pos, byte &val, byte len);
-void eeprom_read(int pos, byte &val);
-void eeprom_read(int pos, int16_t &val);
-void eeprom_read(int pos, uint16_t &val);
-void eeprom_read(int pos, uint32_t &val);
-void eeprom_read(int pos, float &val);
+// Template function for reading data of any type from EEPROM
+template<typename T>
+void eeprom_read(int pos, T& val);
 
 void set_defaults_in_ram();
 void set_defaults_in_setup();
@@ -58,7 +53,7 @@ extern unsigned int LCD_BRIGHTNESS_DURING_RUN;
 extern uint16_t AUX_MAX_JOG_STEPS_PER_SEC;
 extern byte AUX_ON;
 extern byte AUX_REV;
-extern unsigned long build_version;
+extern unsigned int build_version;
 
 extern unsigned int progstep;
 extern unsigned int progtype;

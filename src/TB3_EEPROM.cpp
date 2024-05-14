@@ -1,6 +1,6 @@
 #include "TB3_EEPROM.h"
 
-unsigned long check_version()
+unsigned int check_version()
 {
   unsigned int check_version_from_eeprom;
   eeprom_read(1, check_version_from_eeprom);
@@ -29,80 +29,23 @@ void eeprom_saved(boolean saved)
   EEPROM.write(0, !saved);
 }
 
-void eeprom_write_final(int pos, byte &val, byte len)
-{
-  byte *p = (byte *)(void *)&val;
-  for (byte i = 0; i < len; i++)
-    EEPROM.write(pos++, *p++);
-
-  // indicate that memory has been saved
-  eeprom_saved(true);
+// Simplified template function for writing any type of data to EEPROM
+template<typename T>
+void eeprom_write(int pos, const T& val) {
+  const byte* p = (const byte*)(const void*)&val;
+  for (unsigned int i = 0; i < sizeof(T); i++) {
+    EEPROM.update(pos++, *p++);
+  }
+  eeprom_saved(true);  // Assuming eeprom_saved(bool) is defined elsewhere
 }
 
-void eeprom_write(int pos, uint16_t &val)
-{
-  byte *p = (byte *)(void *)&val;
-  eeprom_write_final(pos, *p, sizeof(int));
-}
-
-void eeprom_write(int pos, uint32_t &val)
-{
-  byte *p = (byte *)(void *)&val;
-  eeprom_write_final(pos, *p, sizeof(long));
-}
-
-void eeprom_write(int pos, float &val)
-{
-  byte *p = (byte *)(void *)&val;
-  eeprom_write_final(pos, *p, sizeof(float));
-}
-
-void eeprom_write(int pos, byte &val)
-{
-  EEPROM.write(pos, val);
-  // indicate that memory has been saved
-  eeprom_saved(true);
-}
-
-// read functions
-
-void eeprom_read(int pos, byte &val, byte len)
-{
-  byte *p = (byte *)(void *)&val;
-  for (byte i = 0; i < len; i++)
+// Simplified template function for reading any type of data from EEPROM
+template<typename T>
+void eeprom_read(int pos, T& val) {
+  byte* p = (byte*)(void*)&val;
+  for (unsigned int i = 0; i < sizeof(T); i++) {
     *p++ = EEPROM.read(pos++);
-}
-
-void eeprom_read(int pos, byte &val)
-{
-  val = EEPROM.read(pos);
-}
-
-void eeprom_read(int pos, int16_t &val)
-{
-  byte *p = (byte *)(void *)&val;
-  eeprom_read(pos, *p, sizeof(int));
-}
-
-void eeprom_read(int pos, uint16_t &val)
-{
-
-  byte *p = (byte *)(void *)&val;
-  eeprom_read(pos, *p, sizeof(int));
-}
-
-void eeprom_read(int pos, uint32_t &val)
-{
-
-  byte *p = (byte *)(void *)&val;
-  eeprom_read(pos, *p, sizeof(long));
-}
-
-void eeprom_read(int pos, float &val)
-{
-
-  byte *p = (byte *)(void *)&val;
-  eeprom_read(pos, *p, sizeof(float));
+  }
 }
 
 void set_defaults_in_ram()

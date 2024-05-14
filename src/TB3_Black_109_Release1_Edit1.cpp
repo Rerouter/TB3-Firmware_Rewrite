@@ -81,7 +81,7 @@ uint16_t STEPS_PER_INCH_AUX = 19125;  //
 const int16_t MAX_AUX_MOVE_DISTANCE = 311; //(31.1 inches)
 // end TB3 section
 
-unsigned long build_version = 10951;    // this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
+unsigned int build_version = 10951;    // this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
 unsigned int intval = 2;                // seconds x10  - used for the interval prompt and display
 unsigned long interval = 2000;          // calculated and is in ms
 unsigned int camera_fired = 0;          // number of shots fired
