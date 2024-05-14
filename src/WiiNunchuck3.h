@@ -43,9 +43,9 @@ class WiiNunchuck3 {
 		int digitalx(int threshold = JOYSTICK_THRESHOLD);
 		int digitaly(int threshold = JOYSTICK_THRESHOLD);
 	private:
-		int cnt;
-		int centeredJoyX;
-		int centeredJoyY;
+		int cnt = 0;
+		int centeredJoyX = 0;
+		int centeredJoyY = 0;
 		uint8_t nunchuck_buf[6];
 
 		void send_zero(void);

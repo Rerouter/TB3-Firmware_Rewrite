@@ -9,12 +9,6 @@
 
 // #define DEBUG // Use serial port debugging if defined.
 
-uint8_t nunchuck_buf[WII_TELEGRAM_LEN]; // array to store arduino output
-
-int cnt = 0;
-int centeredJoyX = 0;
-int centeredJoyY = 0;
-
 WiiNunchuck3::WiiNunchuck3()
 {
 }

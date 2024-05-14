@@ -66,8 +66,6 @@ const uint8_t MOTOR_EN2 = 11;
 const uint8_t MS1 = A1;
 const uint8_t MS2 = A2;
 const uint8_t MS3 = A2;
-#define CAMERA_PIN 12         // drives tip of 2.5 mm connector
-#define FOCUS_PIN 13          // drives  middle of 2.5mm connector
 #define STEPS_PER_DEG 444.444 // 160000 MS per 360 degees = 444.4444444
 
 /*
@@ -353,11 +351,7 @@ void setup()
   digitalWrite(MOTOR_EN2, HIGH); // LOW Enables output, High Disables
 
   // setup camera pins
-  pinMode(CAMERA_PIN, OUTPUT);
-  pinMode(FOCUS_PIN, OUTPUT);
-
-  digitalWrite(CAMERA_PIN, LOW);
-  digitalWrite(FOCUS_PIN, LOW);
+  setup_camera();
 
   setup_IO();
 
@@ -748,7 +742,8 @@ void loop()
         Shot_Sequence_Engaged = true;   //
         Prefire_Engaged = true;         //
         IO_Engaged = true;              //
-        digitalWrite(FOCUS_PIN, HIGH);  // for longer shot interval, wake up the camera
+
+        focus_camera();  // for longer shot interval, wake up the camera
 
         if (POWERSAVE_PT < 4)
           enable_PT(); // don't power on for shot for high power saving
@@ -773,7 +768,7 @@ void loop()
         Shot_Sequence_Engaged = true;  //
         Prefire_Engaged = true;        //
         IO_Engaged = true;             //
-        digitalWrite(FOCUS_PIN, HIGH); // for longer shot interval, wake up the camera
+        focus_camera(); // for longer shot interval, wake up the camera
 
         if (POWERSAVE_PT < 4)
           enable_PT(); // don't power on for shot for high power saving
@@ -806,7 +801,7 @@ void loop()
       // If so remove flags from Static Time Engaged and IO engaged, Turn off I/O port, set flags for motors moving, move motors
       // move motors - figure out delays.   Long delays mean really slow - choose the minimum of the calculated or a good feedrate that is slow
 
-      // if (Program_Engaged && Shot_Sequence_Engaged && Static_Time_Engaged && !Shutter_Signal_Engaged && ((millis() - interval_tm) > (prefire_time*100+static_tm*100)) ) {
+      // if (Program_Engaged && Shot_Sequence_Engaged && Static_Time_Engaged && !camera_shutter() && ((millis() - interval_tm) > (prefire_time*100+static_tm*100)) ) {
       if (Shot_Sequence_Engaged && Static_Time_Engaged && !camera_shutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)))
       { // removed requirement for Program Engaged for external interrupt
 
@@ -1195,7 +1190,7 @@ void loop()
         Shot_Sequence_Engaged = true;  //
         Prefire_Engaged = true;        //
         IO_Engaged = true;             //
-        digitalWrite(FOCUS_PIN, HIGH); // for longer shot interval, wake up the camera
+        focus_camera(); // for longer shot interval, wake up the camera
 
         // if (POWERSAVE_PT<4)   enable_PT();  //don't power on for shot for high power saving
         // if (AUX_ON && POWERSAVE_AUX<4)   enable_AUX();  //don't power on for shot for high power saving
@@ -1226,7 +1221,7 @@ void loop()
       // If so remove flags from Static Time Engaged and IO engaged, Turn off I/O port, set flags for motors moving, move motors
       // move motors - figure out delays.   Long delays mean really slow - choose the minimum of the calculated or a good feedrate that is slow
 
-      // if (Program_Engaged && Shot_Sequence_Engaged && Static_Time_Engaged && !Shutter_Signal_Engaged && ((millis() - interval_tm) > (prefire_time*100+static_tm*100)) ) {
+      // if (Program_Engaged && Shot_Sequence_Engaged && Static_Time_Engaged && !camera_shutter() && ((millis() - interval_tm) > (prefire_time*100+static_tm*100)) ) {
       if (Shot_Sequence_Engaged && Static_Time_Engaged && !camera_shutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)))
       { // removed requirement for Program Engaged for external interrupt
 

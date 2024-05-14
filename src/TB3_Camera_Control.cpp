@@ -2,7 +2,6 @@
 
 // Timer2flags
 unsigned long MsTimer2_msecs;
-// void (*MsTimer2_func)();
 volatile unsigned long MsTimer2_count;
 volatile char MsTimer2_overflowing;
 volatile unsigned int MsTimer2_tcnt2;
@@ -35,6 +34,11 @@ bool camera_shutter()
   return Shutter_Signal_Engaged;
 }
 
+bool camera_focus()
+{
+  return Focus_Signal_Engaged;
+}
+
 void focus_camera()
 {
   digitalWrite(FOCUS_PIN, HIGH); // for longer shot interval, wake up the camera
@@ -58,7 +62,7 @@ void fire_camera(unsigned long exp_tm)
   MsTimer2_set(exp_tm);
   MsTimer2_start();
 
-  Shutter_Signal_Engaged = true; // Update Shutter Signal Engaged to ON
+  Shutter_Signal_Engaged = true;
   Focus_Signal_Engaged = true;
 
   return;
@@ -66,38 +70,10 @@ void fire_camera(unsigned long exp_tm)
 
 void stop_camera()
 {
-  MsTimer3_stop();
+  MsTimer2_stop();
   digitalWrite(CAMERA_PIN, LOW);
-
-  // we do this every time, because
-  // it's possible that the flag
-  // that controls whether or not to
-  // trip focus w. shutter may have
-  // been reset during our exposure,
-  // and failing to do so would keep
-  // the focus pin high for a long
-  // time.
-
   digitalWrite(FOCUS_PIN, LOW);
 
-  // turn off timer - we do this
-  // after the digitalWrite() to minimize
-  // over-shooting in case this takes some
-  // unusually-long amount of time
-
-  // MsTimer2::stop();
-
-  // are we supposed to delay before allowing
-  // the motors to move?  Register a timer
-  // to clear out status flags, otherwise
-  // just clear them out now.
-
-  // the delay is used to prevent motor movement
-  // when shot timing is controlled by the camera.
-  // the post-delay should be set to an amount greater
-  // than the max possible camera exposure timing
-
-  // update Shutter Signal Engaged to be off
   Shutter_Signal_Engaged = false;
   Focus_Signal_Engaged = false;
 }
@@ -138,7 +114,7 @@ void MsTimer2_start()
   TIMSK2 |= (1 << TOIE2);
 }
 
-void MsTimer3_stop()
+void MsTimer2_stop()
 {
   TIMSK2 &= ~(1 << TOIE2);
 }
