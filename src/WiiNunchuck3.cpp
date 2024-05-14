@@ -203,76 +203,47 @@ void WiiNunchuck3::printData()
 
 int WiiNunchuck3::zbutton()
 {
-	// returns zbutton state: 1=pressed, 0=notpressed
-	return ((nunchuck_buf[5] >> 0) & 1) ? 0 : 1; // voodoo
+	// returns zbutton state: 1=pressed, 0=not pressed
+	return !(nunchuck_buf[5] >> 0 & 1);
 }
 
 int WiiNunchuck3::cbutton()
 {
-	// returns cbutton state: 1=pressed, 0=notpressed
-	return ((nunchuck_buf[5] >> 1) & 1) ? 0 : 1; // voodoo
+    // Returns cbutton state: 1=pressed, 0=not pressed
+    return !(nunchuck_buf[5] >> 1 & 1);
 }
 
 int WiiNunchuck3::joyx()
 {
 	// returns value of x-axis joystick
-	// return nunchuck_buf[0]-centeredJoyX;
 	return nunchuck_buf[0];
 }
 
 int WiiNunchuck3::joyy()
 {
 	// returns value of y-axis joystick
-	// return nunchuck_buf[1]-centeredJoyX;
 	return nunchuck_buf[1];
 }
 
 int WiiNunchuck3::accelx()
 {
-	// returns value of x-axis accelerometer
-	int accel_x_axis = nunchuck_buf[2] * 2 * 2;
-	if ((nunchuck_buf[5] >> 2) & 1)
-	{
-		accel_x_axis += 2;
-	}
-	if ((nunchuck_buf[5] >> 3) & 1)
-	{
-		accel_x_axis += 1;
-	}
-
-	return accel_x_axis;
+    // Returns value of x-axis accelerometer
+    // The last two bits are packed into the 3rd and 4th bits of nunchuck_buf[5]
+    return (nunchuck_buf[2] << 2) | ((nunchuck_buf[5] >> 2) & 0x03);
 }
 
 int WiiNunchuck3::accely()
 {
-	// returns value of y-axis accelerometer
-	int accel_y_axis = nunchuck_buf[3] * 2 * 2;
-	if ((nunchuck_buf[5] >> 4) & 1)
-	{
-		accel_y_axis += 2;
-	}
-	if ((nunchuck_buf[5] >> 5) & 1)
-	{
-		accel_y_axis += 1;
-	}
-	return accel_y_axis;
+    // Returns value of y-axis accelerometer
+    // The last two bits are packed into the 5th and 6th bits of nunchuck_buf[5]
+    return (nunchuck_buf[3] << 2) | ((nunchuck_buf[5] >> 4) & 0x03);
 }
 
 int WiiNunchuck3::accelz()
 {
-	// returns value of z-axis accelerometer
-	int accel_z_axis = nunchuck_buf[4] * 2 * 2;
-
-	if ((nunchuck_buf[5] >> 6) & 1)
-	{
-		accel_z_axis += 2;
-	}
-	if ((nunchuck_buf[5] >> 7) & 1)
-	{
-		accel_z_axis += 1;
-	}
-
-	return accel_z_axis;
+    // Returns value of z-axis accelerometer
+    // The last two bits are packed into the first two bits of nunchuck_buf[5]
+    return (nunchuck_buf[4] << 2) | ((nunchuck_buf[5] >> 6) & 0x03);
 }
 
 int WiiNunchuck3::vibration()
@@ -381,21 +352,11 @@ void WiiNunchuck3::calibrate()
 
 int WiiNunchuck3::digitalx(int threshold)
 {
-	// returns 0 for centered, 1 for joystick left, 2 for joystick right
-	// threshold is how far from center it has to be
-	int calibratedjoyx = joyx() - centeredJoyX;
-	if (calibratedjoyx < (threshold * -1))
-	{
-		return -1;
-	}
-	else if (calibratedjoyx > threshold)
-	{
-		return 1;
-	}
-	else
-	{
-		return 0;
-	}
+    // Returns -1 for joystick left, 1 for joystick right, 0 for centered
+    int calibratedjoyx = joyx() - centeredJoyX;  // Calculate deviation from center
+    if (calibratedjoyx < -threshold)     {return -1;}  // Joystick is left
+    else if (calibratedjoyx > threshold) {return 1;}  // Joystick is right
+    return 0;  // Joystick is centered
 }
 
 int WiiNunchuck3::digitaly(int threshold)
@@ -403,18 +364,9 @@ int WiiNunchuck3::digitaly(int threshold)
 	// returns 0 for centered, 1 for joystick up, 2 for joystick down
 	// threshold is how far from center it has to be
 	int calibratedjoyy = joyy() - centeredJoyY;
-	if (calibratedjoyy < (threshold * -1))
-	{
-		return 1;
-	}
-	else if (calibratedjoyy > threshold)
-	{
-		return -1;
-	}
-	else
-	{
-		return 0;
-	}
+    if (calibratedjoyy < -threshold)     {return -1;}  // Joystick is left
+    else if (calibratedjoyy > threshold) {return 1;}  // Joystick is right
+    return 0;  // Joystick is centered
 }
 
 // create the object

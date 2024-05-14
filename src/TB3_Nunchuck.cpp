@@ -1,32 +1,28 @@
 #include "TB3_Nunchuck.h"
 
 
-int NCReadStatus = 0;           // control variable for NC error handling
 const bool DEBUG_NC = 0;
 int joy_x_axis_Offset;
-int joy_x_axis_Threshold;
+int joy_x_axis_Threshold = 100;
 int joy_y_axis_Offset;
-int joy_y_axis_Threshold;
+int joy_y_axis_Threshold = 100;
 int accel_x_axis_Offset;
-int accel_x_axis_Threshold;
+int accel_x_axis_Threshold = 200;
 
 void calibrate_joystick(int tempx, int tempy)
 {
-  if (DEBUG_NC)
-    Serial.println(micros());
+  if (DEBUG_NC) {Serial.println(micros());}
 
   joy_x_axis_Offset = tempx;
-  joy_x_axis_Threshold = 100; // int joy_x_axis_map=180;
   joy_y_axis_Offset = tempy;
-  joy_y_axis_Threshold = 100; // int joy_y_axis_map=180;
-  accel_x_axis_Offset = 500;
-  accel_x_axis_Threshold = 200; // hardcode this, don't calibrate
+  accel_x_axis_Offset = 512;
 }
 
 void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes about 1050 microsecond
 {
-  if (DEBUG_NC)
-    Serial.println(micros());
+  static int NCReadStatus = 0;           // control variable for NC error handling
+  
+  if (DEBUG_NC) {Serial.println(micros());}
 
   do
   {
@@ -54,10 +50,10 @@ void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes
       NCReadStatus = 0;
 
   } while (NCReadStatus > 0);
-  if (DEBUG_NC)
+  if (DEBUG_NC) {
     Serial.println(micros());
-  if (DEBUG_NC)
     Nunchuck.printData();
+  }
 }
 
 void NunChuckjoybuttons()
