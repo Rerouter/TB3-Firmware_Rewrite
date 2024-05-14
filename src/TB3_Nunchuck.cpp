@@ -1,11 +1,11 @@
 #include "TB3_Nunchuck.h"
 
-
 const bool DEBUG_NC = 0;
+
 int joy_x_axis_Offset;
-int joy_x_axis_Threshold = 100;
+int joy_x_axis_Threshold;
 int joy_y_axis_Offset;
-int joy_y_axis_Threshold = 100;
+int joy_y_axis_Threshold;
 int accel_x_axis_Offset;
 int accel_x_axis_Threshold = 200;
 
@@ -16,6 +16,8 @@ void calibrate_joystick(int tempx, int tempy)
   joy_x_axis_Offset = tempx;
   joy_y_axis_Offset = tempy;
   accel_x_axis_Offset = 512;
+  joy_x_axis_Threshold = min(abs(127 - joy_x_axis_Offset), abs(-128 - joy_x_axis_Offset));
+  joy_y_axis_Threshold = min(abs(127 - joy_y_axis_Offset), abs(-128 - joy_y_axis_Offset));
 }
 
 void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes about 1050 microsecond
@@ -56,6 +58,10 @@ void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes
   }
 }
 
+inline int JoystickLockCounter(int lockCount, int joyAxisValue, int threshold) {
+    return (abs(joyAxisValue) > threshold) ? ((lockCount + 1 > 250) ? 250 : lockCount + 1) : 0;
+}
+
 void NunChuckjoybuttons()
 {
 
@@ -66,81 +72,19 @@ void NunChuckjoybuttons()
     accel_x_axis *= -1;
 
   // create a deadband
-  int deadband = 15; // results in 100-15 or +-85 - this is for the joystick
-  if (joy_x_axis > deadband)
-  {
-    joy_x_axis = (joy_x_axis - deadband); // this direction lines up with the left right of the display
-  }
-  else if (joy_x_axis < -deadband)
-  {
-    joy_x_axis = (joy_x_axis + deadband);
-  }
-  else
-  {
-    joy_x_axis = 0;
-  }
-  if (joy_y_axis > deadband)
-  {
-    joy_y_axis = -1 * (joy_y_axis - deadband);
-  }
-  else if (joy_y_axis < -deadband)
-  {
-    joy_y_axis = -1 * (joy_y_axis + deadband);
-  }
-  else
-  {
-    joy_y_axis = 0;
-  }
+  joy_x_axis   = joystick_deadband(joy_x_axis, 15);
+  joy_y_axis   = joystick_deadband(joy_y_axis, 15);
+  accel_x_axis   = joystick_deadband(accel_x_axis, 100);
 
-  int deadband2 = 100; //  this is for the accelerometer
-  if (accel_x_axis > deadband2)
-  {
-    accel_x_axis = -1 * (accel_x_axis - deadband2);
-  }
-  else if (accel_x_axis < -deadband2)
-  {
-    accel_x_axis = -1 * (accel_x_axis + deadband2);
-  }
-  else
-  {
-    accel_x_axis = 0;
-  }
-
-  // check for joystick y lock for more than one second
-  if (abs(joy_y_axis) > 83)
-  {
-    joy_y_lock_count++;
-    if (joy_y_lock_count > 250)
-      joy_y_lock_count = 250; // prevent overflow
-  }
-  else
-  {
-    joy_y_lock_count = 0;
-  }
-
-  // check for joystick x lock for more than one second
-  if (abs(joy_x_axis) > 83)
-  {
-    joy_x_lock_count++;
-    if (joy_x_lock_count > 250)
-      joy_x_lock_count = 250; // prevent overflow
-  }
-  else
-  {
-    joy_x_lock_count = 0;
-  }
+  joy_x_lock_count = JoystickLockCounter(joy_x_lock_count, joy_x_axis, 83);
+  joy_y_lock_count = JoystickLockCounter(joy_y_lock_count, joy_y_axis, 83);
 
   c_button = Nunchuck.cbutton();
   z_button = Nunchuck.zbutton();
 
-  if (!c_button && !z_button)
-    CZ_Released = true; // look for both release of a button to set this flag.
-  if (!c_button)
-    C_Released = true; // look for both release of a button to set this flag.
-  if (!z_button)
-    Z_Released = true; // look for both release of a button to set this flag.
-
-  // if (c_button==1 || z_button==1) user_input();
+  if (!c_button && !z_button) CZ_Released = true; // look for both release of a button to set this flag.
+  if (!c_button)               C_Released = true; // look for both release of a button to set this flag.
+  if (!z_button)               Z_Released = true; // look for both release of a button to set this flag.
 }
 
 void applyjoymovebuffer_exponential() // exponential stuff
@@ -247,45 +191,29 @@ void applyjoymovebuffer_linear()
 
 void nc_sleep()
 {
-  if ((joy_x_axis > 15) | (joy_x_axis < -15) | (joy_y_axis > 15) | (joy_y_axis < -15))
-  {
-    digitalWrite(MOTOR_EN, LOW);
-  }
-  else
-    digitalWrite(MOTOR_EN, HIGH);
+  // Disable motor if joystick movement exceeds 15 units in any direction
+  bool isActive = abs(joy_x_axis) > 15 || abs(joy_y_axis) > 15;
+  digitalWrite(MOTOR_EN, !isActive ? HIGH : LOW);
+}
+
+inline int joystick_deadband(int joy_axis, int threshold) {
+  // If in the deadband, return 0, otherwise subtract the deadband from the value
+    return (abs(joy_axis) >= threshold) ? joy_axis + (joy_axis >= threshold ? -threshold : threshold) : 0;
 }
 
 void axis_button_deadzone()
 {
-
-  joy_x_axis = constrain((Nunchuck.joyx() - joy_x_axis_Offset), -100, 100);       // gets us to +- 100
-  joy_y_axis = constrain((Nunchuck.joyy() - joy_y_axis_Offset), -100, 100);       // gets us to +- 100
-  accel_x_axis = constrain((Nunchuck.accelx() - accel_x_axis_Offset), -130, 130); // gets us to +- 100
+  joy_x_axis = constrain((Nunchuck.joyx() - joy_x_axis_Offset), -joy_x_axis_Threshold, joy_x_axis_Threshold);
+  joy_y_axis = constrain((Nunchuck.joyy() - joy_y_axis_Offset), -joy_y_axis_Threshold, joy_y_axis_Threshold);
+  accel_x_axis = constrain((Nunchuck.accelx() - accel_x_axis_Offset),  -accel_x_axis_Threshold, accel_x_axis_Threshold);
   if (AUX_REV)
     accel_x_axis *= -1;
   c_button = Nunchuck.cbutton();
   z_button = Nunchuck.zbutton();
 
-  if (abs(joy_x_axis) < 6.0)
-    joy_x_axis = 0.0;
-  if (joy_x_axis > 5.0)
-    joy_x_axis -= 5.0;
-  else if (joy_x_axis < -5.0)
-    joy_x_axis += 5.0;
-
-  if (abs(joy_y_axis) < 6.0)
-    joy_y_axis = 0.0;
-  if (joy_y_axis > 5.0)
-    joy_y_axis -= 5.0;
-  else if (joy_y_axis < -5.0)
-    joy_y_axis += 5.0;
-
-  if (abs(accel_x_axis) < 31.0)
-    accel_x_axis = 0.0;
-  if (accel_x_axis > 30.0)
-    accel_x_axis -= 30.0;
-  else if (accel_x_axis < -30.0)
-    accel_x_axis += 30.0;
+  joy_x_axis   = joystick_deadband(joy_x_axis, 5);
+  joy_y_axis   = joystick_deadband(joy_y_axis, 5);
+  accel_x_axis = joystick_deadband(accel_x_axis, 30);
 }
 
 void updateMotorVelocities2() // Happens  20 times a second

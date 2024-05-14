@@ -31,8 +31,8 @@ class WiiNunchuck3 {
 		int getData(void);
 		void printData(void);
 		void init(int);
-		int zbutton(void);
-		int cbutton(void);
+		bool zbutton(void);
+		bool cbutton(void);
 		int joyx(void);
 		int joyy(void);
 		int accelx(void);
@@ -53,7 +53,6 @@ class WiiNunchuck3 {
 		void setpowerpins(void);
 		void send_request(void);
 		char decode_byte(char);
-
 };
 
 #endif

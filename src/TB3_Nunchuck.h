@@ -14,6 +14,9 @@ void nc_sleep();
 void axis_button_deadzone();
 void updateMotorVelocities2();
 
+inline int joystick_deadband(int joy_axis, int threshold);
+inline int JoystickLockCounter(int lockCount, int joyAxisValue, int threshold);
+
 #endif
 
 

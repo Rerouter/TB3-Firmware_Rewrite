@@ -2,12 +2,11 @@
 #include "WiiNunchuck3.h"
 #include "Wire.h"
 
-#define USE_NEW_WAY_INIT 1 // see http://wiibrew.org/wiki/Wiimote#The_New_Way.  If set to 0, this library won't work for third party nunchucks
-#define WII_IDENT_LEN ((byte)6)
-#define WII_TELEGRAM_LEN ((byte)6)
-#define WII_NUNCHUCK_TWI_ADR ((byte)0x52)
+const boolean USE_NEW_WAY_INIT = true; // see http://wiibrew.org/wiki/Wiimote#The_New_Way.  If set to 0, this library won't work for third party nunchucks
+const uint8_t WII_TELEGRAM_LEN  = 6;
+const uint8_t WII_NUNCHUCK_TWI_ADR = 0x52;
 
-// #define DEBUG // Use serial port debugging if defined.
+const boolean DEBUG = false; // Use serial port debugging if defined.
 
 WiiNunchuck3::WiiNunchuck3()
 {
@@ -25,6 +24,7 @@ void WiiNunchuck3::send_zero()
 		Wire.endTransmission(); // stop transmitting
 	}
 }
+
 void WiiNunchuck3::clearTwiInputBuffer(void)
 {
 	// clear the receive buffer from any partial data
@@ -42,6 +42,7 @@ void WiiNunchuck3::setpowerpins()
 	PORTC |= _BV(pwrpin);
 	delay(100); // wait for things to stabilize
 }
+
 void WiiNunchuck3::send_request()
 {
 	// Send a request for data to the nunchuck
@@ -91,7 +92,7 @@ void WiiNunchuck3::init(int power)
 
 	// initialize the I2C system, join the I2C bus,
 	// and tell the nunchuck we're talking to it
-	unsigned short timeout = 0; // never timeout
+	//unsigned short timeout = 0; // never timeout
 	Wire.begin();				// join i2c bus as master
 // we need to switch the TWI speed, because the nunchuck uses Fast-TWI
 // normally set in hardware\libraries\Wire\utility\twi.c twi_init()
@@ -99,7 +100,6 @@ void WiiNunchuck3::init(int power)
 #define TWI_FREQ_NUNCHUCK 400000L
 	TWBR = ((16000000 / TWI_FREQ_NUNCHUCK) - 16) / 2;
 
-	byte rc = 1;
 #ifndef USE_NEW_WAY_INIT
 	// look at <http://wiibrew.org/wiki/Wiimote#The_Old_Way> at "The Old Way"
 	Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
@@ -113,6 +113,7 @@ void WiiNunchuck3::init(int power)
 	// look at <http://wiibrew.org/wiki/Wiimote#The_New_Way> at "The New Way"
 
 	unsigned long time = millis();
+	byte rc = 1;
 	do
 	{
 		Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
@@ -201,13 +202,13 @@ void WiiNunchuck3::printData()
 	i++;
 }
 
-int WiiNunchuck3::zbutton()
+bool WiiNunchuck3::zbutton()
 {
 	// returns zbutton state: 1=pressed, 0=not pressed
 	return !(nunchuck_buf[5] >> 0 & 1);
 }
 
-int WiiNunchuck3::cbutton()
+bool WiiNunchuck3::cbutton()
 {
     // Returns cbutton state: 1=pressed, 0=not pressed
     return !(nunchuck_buf[5] >> 1 & 1);
@@ -262,15 +263,16 @@ int WiiNunchuck3::vibration()
 		int y = accely();
 		int z = accelz();
 
-#ifdef DEBUG
-		// :DEBUGING:
-		Serial.print("X/Y/Z values: ");
-		Serial.print(x);
-		Serial.print("\t");
-		Serial.print(y);
-		Serial.print("\t");
-		Serial.println(z);
-#endif
+		if (DEBUG)
+		{
+			// :DEBUGING:
+			Serial.print("X/Y/Z values: ");
+			Serial.print(x);
+			Serial.print("\t");
+			Serial.print(y);
+			Serial.print("\t");
+			Serial.println(z);
+		}
 
 		if (x < accelerometers[0][0])
 		{
@@ -298,41 +300,43 @@ int WiiNunchuck3::vibration()
 		{
 			accelerometers[2][1] = z;
 		}
-#ifdef DEBUG
-		// :DEBUGING: print accelerometer min/max
-		Serial.print("Accelerometer X min/max ");
-		Serial.print(accelerometers[0][0]);
-		Serial.print("/");
-		Serial.println(accelerometers[0][1]);
+		if (DEBUG)
+		{
+			// :DEBUGING: print accelerometer min/max
+			Serial.print("Accelerometer X min/max ");
+			Serial.print(accelerometers[0][0]);
+			Serial.print("/");
+			Serial.println(accelerometers[0][1]);
 
-		Serial.print("Accelerometer y min/max ");
-		Serial.print(accelerometers[1][0]);
-		Serial.print("/");
-		Serial.println(accelerometers[1][1]);
+			Serial.print("Accelerometer y min/max ");
+			Serial.print(accelerometers[1][0]);
+			Serial.print("/");
+			Serial.println(accelerometers[1][1]);
 
-		Serial.print("Accelerometer z min/max ");
-		Serial.print(accelerometers[2][0]);
-		Serial.print("/");
-		Serial.println(accelerometers[2][1]);
-#endif
+			Serial.print("Accelerometer z min/max ");
+			Serial.print(accelerometers[2][0]);
+			Serial.print("/");
+			Serial.println(accelerometers[2][1]);
+		}
 	}
 
 	int xdiff = accelerometers[0][1] - accelerometers[0][0];
 	int ydiff = accelerometers[1][1] - accelerometers[1][0];
 	int zdiff = accelerometers[2][1] - accelerometers[2][0];
 
-#ifdef DEBUG
-	// Debugging
-	Serial.print("Ranges: ");
-	Serial.print(xdiff);
-	Serial.print("\t");
-	Serial.print(ydiff);
-	Serial.print("\t");
-	Serial.println(zdiff);
+	if (DEBUG)
+	{
+		// Debugging
+		Serial.print("Ranges: ");
+		Serial.print(xdiff);
+		Serial.print("\t");
+		Serial.print(ydiff);
+		Serial.print("\t");
+		Serial.println(zdiff);
 
-	Serial.print("Final value: ");
-	Serial.println(xdiff + ydiff + zdiff);
-#endif
+		Serial.print("Final value: ");
+		Serial.println(xdiff + ydiff + zdiff);
+	}
 	return xdiff + ydiff + zdiff;
 }
 
