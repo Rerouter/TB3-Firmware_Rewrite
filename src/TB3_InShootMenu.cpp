@@ -144,7 +144,7 @@ void InProg_Select_Option()
 
     lcd.at(2, 1, "UpDown  C-Select");
     first_time = 0;
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     if (POWERSAVE_PT > 2)
       disable_PT();
     if (POWERSAVE_AUX > 2)
@@ -157,8 +157,7 @@ void InProg_Select_Option()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   if (inprogtype == INPROG_GOTO_FRAME)

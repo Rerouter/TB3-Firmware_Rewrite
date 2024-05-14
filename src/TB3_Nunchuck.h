@@ -7,11 +7,10 @@
 
 void calibrate_joystick(int tempx, int tempy);
 void NunChuckQuerywithEC();
-void NunChuckjoybuttons();
+void UpdateNunChuck();
 void applyjoymovebuffer_exponential();
 void applyjoymovebuffer_linear();
 void nc_sleep();
-void axis_button_deadzone();
 void updateMotorVelocities2();
 
 inline int joystick_deadband(int joy_axis, int threshold);

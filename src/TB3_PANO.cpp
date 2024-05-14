@@ -55,7 +55,7 @@ void Set_angle_of_view()
     lcd.at(2, 11, steps_to_deg_decimal(0));
     first_time = 0;
     // delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
 
     //   Velocity Engine update
     DFSetup(); // setup the ISR
@@ -64,8 +64,7 @@ void Set_angle_of_view()
   // Velocity Engine update
   if (!nextMoveLoaded)
   {
-    NunChuckQuerywithEC();
-    axis_button_deadzone();
+    UpdateNunChuck();
     updateMotorVelocities2();
 
     lcd.at(1, 11, steps_to_deg_decimal(abs(current_steps.x)));
@@ -86,13 +85,12 @@ void Define_Overlap_Percentage()
     Display_olpercentage();
     first_time = 0;
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
                            // motor_steps_pt[2][0];
   }
 
   unsigned int olpercentage_last = olpercentage;
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
   if (olpercentage < 20)
     joy_y_lock_count = 0;
   olpercentage += joy_capture3();
@@ -198,7 +196,7 @@ void Set_PanoArrayType()
 
     first_time = 0;
     delay(500);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
@@ -206,8 +204,7 @@ void Set_PanoArrayType()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -334,7 +331,7 @@ void Pano_Review_Confirm()
     draw(42, 2, 2); // lcd.at(2,2,"Confirm Setting");
     // delay(prompt_time);
     delay(500);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     delay(100);
     lcd.empty();
     first_time = 0;
@@ -354,8 +351,7 @@ void Pano_Review_Confirm()
 
   } // end test for display update
 
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
 
   if (abs(joy_y_axis) > 20)
   { // do read time updates to delay program
@@ -762,7 +758,7 @@ void button_actions290()
       progstep = 216; //  move to the main program at the interval setting UD050715
     first_time = 1;
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // lcd.bright(0); //run in dimmed mode
     break;
   }

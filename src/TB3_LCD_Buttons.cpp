@@ -71,7 +71,7 @@ void Choose_Program()
       lcd.at(1, 2, "errors");
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = 0;
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     if (POWERSAVE_PT > 2)
       disable_PT();
     if (POWERSAVE_AUX > 2)
@@ -84,8 +84,7 @@ void Choose_Program()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -254,7 +253,7 @@ void Move_to_Startpoint()
     }
 
     first_time = 0;
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     delay(prompt_time);
     // prev_joy_x_reading=0; //prevents buffer from moving axis from previous input
     // prev_joy_y_reading=0;
@@ -270,8 +269,7 @@ void Move_to_Startpoint()
   // Velocity Engine update
   if (!nextMoveLoaded)
   {
-    NunChuckQuerywithEC();
-    axis_button_deadzone();
+    UpdateNunChuck();
     updateMotorVelocities2();
     button_actions_move_start(); // check buttons
   }
@@ -363,14 +361,13 @@ void Move_to_Endpoint()
     accel_x_axis = 0;
     startISR1();
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     enable_PT();
     if (AUX_ON)
       enable_AUX(); //
   }
   /*
-          NunChuckQuerywithEC();
-          NunChuckjoybuttons();
+          UpdateNunChuck();
           applyjoymovebuffer_exponential();
           dda_move(feedrate_micros);
           button_actions_move_end();  //read buttons, look for home set on c
@@ -380,8 +377,7 @@ void Move_to_Endpoint()
   // Velocity Engine update
   if (!nextMoveLoaded)
   {
-    NunChuckQuerywithEC();
-    axis_button_deadzone();
+    UpdateNunChuck();
     updateMotorVelocities2();
     button_actions_move_end(); // check buttons
   }
@@ -467,8 +463,7 @@ void button_actions_move_end()
       // add new double check routine for spurious reads of z
       // user_input();
       delay(1);
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       if (z_button)
       {
         progstep_backward();
@@ -528,7 +523,7 @@ void Move_to_Point_X(int Point)
 
     first_time = 0;
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     joy_x_axis = 0;
     joy_y_axis = 0;
     accel_x_axis = 0;
@@ -540,8 +535,7 @@ void Move_to_Point_X(int Point)
   // Velocity Engine update
   if (!nextMoveLoaded)
   {
-    NunChuckQuerywithEC();
-    axis_button_deadzone();
+    UpdateNunChuck();
     updateMotorVelocities2();
     button_actions_move_x(Point); // check buttons
   }
@@ -655,8 +649,7 @@ void button_actions_move_x(int Point)
         }
       } while (motorMoving);
       delay(1);
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       if (z_button)
       {
         progstep_backward();
@@ -680,7 +673,7 @@ void Set_Cam_Interval()
     lcd.empty();
     draw(17, 1, 1); // lcd.at(1,1,"Set Sht Interval");
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(18, 1, 1); // lcd.at(1,1,"Intval:   .  sec");
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
@@ -689,8 +682,7 @@ void Set_Cam_Interval()
   }
 
   unsigned int intval_last = intval;
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
   if (intval < 20)
     joy_y_lock_count = 0;
   intval += joy_capture3();
@@ -794,7 +786,7 @@ void Set_Duration() // This is really setting frames
     draw(32, 1, 5); // lcd.at(1,5,    "Set Move");
     draw(33, 2, 5); // lcd.at(2,5,    "Duration");
     delay(prompt_time * 1.5);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(34, 1, 10); // lcd.at(1,9,"H:MM:SS");
     if ((intval > 3) || (intval == EXTTRIG_INTVAL))
@@ -814,8 +806,7 @@ void Set_Duration() // This is really setting frames
     first_time = 0;
   }
 
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
 
   if (intval == VIDEO_INTVAL)
   { // video
@@ -935,7 +926,7 @@ void Set_Static_Time()
     lcd.empty();
     draw(22, 1, 1); // lcd.at(1,1,"Set Static Time");
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(23, 1, 1);                                 // lcd.at(1,1,"Stat_T:   .  sec");
     draw(3, 2, 1);                                  // lcd.at(2,1,CZ1);
@@ -949,8 +940,7 @@ void Set_Static_Time()
   }
 
   unsigned int static_tm_last = static_tm;
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
 
   if (static_tm < 20)
     joy_y_lock_count = 0;
@@ -1038,7 +1028,7 @@ void Set_Ramp()
     lcd.empty();
     draw(29, 1, 1); // lcd.at(1,1,"    Set Ramp");
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(30, 1, 1); // lcd.at(1,1,"Ramp:     Frames");
     if (intval == VIDEO_INTVAL)
@@ -1053,8 +1043,7 @@ void Set_Ramp()
   }
 
   unsigned int rampval_last = rampval;
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
   if (rampval < 20)
     joy_y_lock_count = 0;
   rampval += joy_capture3();
@@ -1135,7 +1124,7 @@ void Set_LeadIn_LeadOut()
     draw(36, 1, 1); // lcd.at(1,1,"Set Static Lead");
     draw(37, 2, 2); // lcd.at(2,2,"In/Out Frames");
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(38, 1, 6); // lcd.at(1,1,"IN -    Out");
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
@@ -1147,8 +1136,7 @@ void Set_LeadIn_LeadOut()
 
   int joyxysum_last = joy_x_axis + joy_y_axis; // figure out if changing
 
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
   cursorpos += joy_capture_x1();
   cursorpos = constrain(cursorpos, 1, 2);
 
@@ -1286,7 +1274,7 @@ void button_actions_lead_in_out()
     */
     // end of code block to be moved from LeadinLeadOut
 
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     progstep_forward();
     break;
 
@@ -1370,7 +1358,7 @@ void Review_Confirm()
     draw(42, 2, 2); // lcd.at(2,2,"Confirm Setting");
     // delay(prompt_time);
     delay(prompt_time);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(100);
     lcd.empty();
     first_time = 0;
@@ -1393,8 +1381,7 @@ void Review_Confirm()
 
   } // end test for display update
 
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
 
   if (abs(joy_y_axis) > 20)
   { // do read time updates to delay program
@@ -1483,8 +1470,7 @@ void button_actions_review()
       calc_time_remain_start_delay();
       if ((millis() - diplay_last_tm) > 1000)
         display_time(2, 1);
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       Check_Prog(); // look for long button press
       if (CZ_Button_Read_Count > 20 && !Program_Engaged)
       {
@@ -1558,7 +1544,7 @@ void progstep_forward()
   progstep_forward_dir = true;
   progstep++;
   delay(100);
-  NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+  UpdateNunChuck(); //  Use this to clear out any button registry from the last step
 }
 
 void progstep_backward()
@@ -1570,7 +1556,7 @@ void progstep_backward()
   else
     progstep = 0;
   delay(100);
-  NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+  UpdateNunChuck(); //  Use this to clear out any button registry from the last step
 }
 
 void progstep_goto(unsigned int prgstp)
@@ -1579,7 +1565,7 @@ void progstep_goto(unsigned int prgstp)
   first_time = 1;
   progstep = prgstp;
   delay(100);
-  NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+  UpdateNunChuck(); //  Use this to clear out any button registry from the last step
 }
 
 void button_actions_end_of_program()
@@ -1679,8 +1665,7 @@ void Auto_Repeat_Video()
             //enter delay routine
             calc_time_remain_start_delay ();
             if ((millis()-diplay_last_tm) > 1000) display_time(2,1);
-            NunChuckQuerywithEC();
-            NunChuckjoybuttons();
+            UpdateNunChuck();
             Check_Prog(); //look for long button press
             if (CZ_Button_Read_Count>20 && !Program_Engaged) {
                   start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
@@ -1871,7 +1856,7 @@ void display_status()
     lcd.at(1, 5, "/"); // Add to one time display update
     lcd.at(2, 13, ".");
     lcd.at(2, 16, "v");
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // lcd.empty();
     first_time = 0;
   }
@@ -2093,7 +2078,7 @@ void Enter_Aux_Endpoint()
     // Serial.println(current_steps.z);
     // Serial.println(int(current_steps.z/STEPS_PER_INCH_AUX));
 
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     lcd.at(1, 1, "AuxDist:   .  In");
     draw(3, 2, 1); // lcd.at(2,1,CZ1);
@@ -2104,8 +2089,7 @@ void Enter_Aux_Endpoint()
   }
 
   int aux_dist_last = aux_dist;
-  NunChuckQuerywithEC();
-  NunChuckjoybuttons();
+  UpdateNunChuck();
 
   aux_dist += joy_capture3();
   // aux_dist=constrain(aux_dist,-999,999);

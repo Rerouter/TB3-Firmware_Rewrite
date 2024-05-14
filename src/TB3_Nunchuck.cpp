@@ -9,6 +9,10 @@ int joy_y_axis_Threshold;
 int accel_x_axis_Offset;
 int accel_x_axis_Threshold = 200;
 
+const uint8_t joy_deadband = 15;
+const uint8_t acc_deadband = 100;
+const uint8_t joy_lock_theshold = 83;
+
 void calibrate_joystick(int tempx, int tempy)
 {
   if (DEBUG_NC) {Serial.println(micros());}
@@ -58,13 +62,13 @@ void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes
   }
 }
 
-inline int JoystickLockCounter(int lockCount, int joyAxisValue, int threshold) {
-    return (abs(joyAxisValue) > threshold) ? ((lockCount + 1 > 250) ? 250 : lockCount + 1) : 0;
+inline int JoystickLockCounter(int lockCount, int joyAxisValue) {
+    return (abs(joyAxisValue) > joy_lock_theshold) ? ((lockCount + 1 > 250) ? 250 : lockCount + 1) : 0;
 }
 
-void NunChuckjoybuttons()
+void UpdateNunChuck()
 {
-
+  NunChuckQuerywithEC();
   joy_x_axis = constrain((Nunchuck.joyx() - joy_x_axis_Offset), -joy_x_axis_Threshold, joy_x_axis_Threshold);
   joy_y_axis = constrain((Nunchuck.joyy() - joy_y_axis_Offset), -joy_y_axis_Threshold, joy_y_axis_Threshold);
   accel_x_axis = constrain((Nunchuck.accelx() - accel_x_axis_Offset), -accel_x_axis_Threshold, accel_x_axis_Threshold);
@@ -72,12 +76,12 @@ void NunChuckjoybuttons()
     accel_x_axis *= -1;
 
   // create a deadband
-  joy_x_axis   = joystick_deadband(joy_x_axis, 15);
-  joy_y_axis   = joystick_deadband(joy_y_axis, 15);
-  accel_x_axis   = joystick_deadband(accel_x_axis, 100);
+  joy_x_axis   = joystick_deadband(joy_x_axis, joy_deadband);
+  joy_y_axis   = joystick_deadband(joy_y_axis, joy_deadband);
+  accel_x_axis   = joystick_deadband(accel_x_axis, acc_deadband);
 
-  joy_x_lock_count = JoystickLockCounter(joy_x_lock_count, joy_x_axis, 83);
-  joy_y_lock_count = JoystickLockCounter(joy_y_lock_count, joy_y_axis, 83);
+  joy_x_lock_count = JoystickLockCounter(joy_x_lock_count, joy_x_axis);
+  joy_y_lock_count = JoystickLockCounter(joy_y_lock_count, joy_y_axis);
 
   c_button = Nunchuck.cbutton();
   z_button = Nunchuck.zbutton();
@@ -199,21 +203,6 @@ void nc_sleep()
 inline int joystick_deadband(int joy_axis, int threshold) {
   // If in the deadband, return 0, otherwise subtract the deadband from the value
     return (abs(joy_axis) >= threshold) ? joy_axis + (joy_axis >= threshold ? -threshold : threshold) : 0;
-}
-
-void axis_button_deadzone()
-{
-  joy_x_axis = constrain((Nunchuck.joyx() - joy_x_axis_Offset), -joy_x_axis_Threshold, joy_x_axis_Threshold);
-  joy_y_axis = constrain((Nunchuck.joyy() - joy_y_axis_Offset), -joy_y_axis_Threshold, joy_y_axis_Threshold);
-  accel_x_axis = constrain((Nunchuck.accelx() - accel_x_axis_Offset),  -accel_x_axis_Threshold, accel_x_axis_Threshold);
-  if (AUX_REV)
-    accel_x_axis *= -1;
-  c_button = Nunchuck.cbutton();
-  z_button = Nunchuck.zbutton();
-
-  joy_x_axis   = joystick_deadband(joy_x_axis, 5);
-  joy_y_axis   = joystick_deadband(joy_y_axis, 5);
-  accel_x_axis = joystick_deadband(accel_x_axis, 30);
 }
 
 void updateMotorVelocities2() // Happens  20 times a second

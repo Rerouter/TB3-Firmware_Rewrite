@@ -23,8 +23,7 @@ extern const uint8_t SETUPMENU;
 extern NHDLCD9 lcd;
 
 extern void draw(int array_num, int col, int row);
-extern void NunChuckQuerywithEC();
-extern void NunChuckjoybuttons();
+extern void UpdateNunChuck();
 extern int joy_capture_y1();
 extern void progstep_forward();
 extern void progstep_backward();

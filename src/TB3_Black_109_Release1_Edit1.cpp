@@ -864,8 +864,7 @@ void loop()
 
       // This portion always runs in empty space of loop.
 
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       Check_Prog(); // look for button presses
       // if (CZ_Button_Read_Count>10 && intval==EXTTRIG_INTVAL ) Interrupt_Fire_Engaged=true; // manual trigger
       // if (PAUSE_ENABLED && CZ_Button_Read_Count>10 && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
@@ -911,8 +910,7 @@ void loop()
           Program_Engaged = false;
           for (int i = 0; i < 30; i++)
           {
-            NunChuckQuerywithEC();
-            NunChuckjoybuttons();
+            UpdateNunChuck();
             Check_Prog(); // look for button presses
             if (PAUSE_ENABLED && CZ_Button_Read_Count > 25)
             {
@@ -922,8 +920,7 @@ void loop()
               lcd.at(2, 1, "Release Buttons");
               do
               {
-                NunChuckQuerywithEC();
-                NunChuckjoybuttons();
+                UpdateNunChuck();
 
               } while (c_button || z_button);
               progstep = 9;
@@ -937,8 +934,7 @@ void loop()
             calc_time_remain_start_delay();
             if ((millis() - diplay_last_tm) > 1000)
               display_time(2, 1);
-            NunChuckQuerywithEC();
-            NunChuckjoybuttons();
+            UpdateNunChuck();
             Check_Prog(); // look for long button press
             // if (CZ_Button_Read_Count>20 && !Program_Engaged) {
             //	start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
@@ -964,7 +960,7 @@ void loop()
           progstep = 90;
           first_time = 1;
           delay(100);
-          // NunChuckQuerywithEC();
+          // UpdateNunChuck();
         }
 
       } // end interrupt routine driven for 2 points
@@ -1017,7 +1013,7 @@ void loop()
           progstep = 90;
           first_time = 1;
           // delay(100);
-          // NunChuckQuerywithEC();
+          // UpdateNunChuck();
         }
 
       } // End video loop for 3 Point moves
@@ -1139,8 +1135,7 @@ void loop()
         progstep = 90;
         first_time = 1;
       }
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       Check_Prog(); // look for button presses
       if (CZ_Button_Read_Count > 10 && intval == EXTTRIG_INTVAL)
         Interrupt_Fire_Engaged = true; // manual trigger
@@ -1154,15 +1149,14 @@ void loop()
         lcd.empty();
         lcd.at(1, 4, "Repeat - C");
         lcd.at(2, 4, "Reverse - Z");
-        NunChuckQuerywithEC();
+        UpdateNunChuck();
         first_time = 0;
         delay(100);
       }
 
       // This portion always runs in empty space of loop.
 
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       Check_Prog(); // look for button presses
       // add error handling here to prevent accidental starts
       // if (CZ_Button_Read_Count>25  && CZ_Released ) button_actions_end_of_program();  //Repeat or Reverses
@@ -1337,8 +1331,7 @@ void loop()
         first_time = 1;
       }
       // updateMotorVelocities();  //uncomment this for DF Loop
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       // Check_Prog(); //look for button presses
       //  if (CZ_Button_Read_Count>10 && intval==EXTTRIG_INTVAL ) Interrupt_Fire_Engaged=true; // manual trigger
       //  if (PAUSE_ENABLED && CZ_Button_Read_Count>20 && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
@@ -1352,12 +1345,11 @@ void loop()
         stopISR1();
         draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
         draw(59, 2, 1); // lcd.at(2,1," Repeat Press C");
-        NunChuckQuerywithEC();
+        UpdateNunChuck();
         first_time = 0;
         delay(100);
       }
-      NunChuckQuerywithEC();
-      NunChuckjoybuttons();
+      UpdateNunChuck();
       button_actions290(); // read buttons, look for c button press to start run
       break;               // break 90
 

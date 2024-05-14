@@ -73,10 +73,8 @@ extern const uint8_t PANO_5x5TopThird;
 extern const uint8_t PANO_7X5TopThird;
 
 extern void draw(int array_num, int col, int row);
-extern void NunChuckQuerywithEC();
-extern void NunChuckjoybuttons();
+extern void UpdateNunChuck();
 extern void DFSetup();
-extern void axis_button_deadzone();
 extern void updateMotorVelocities2();
 extern void button_actions_move_x(int point);
 extern int joy_capture_y1();

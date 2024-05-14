@@ -18,15 +18,14 @@ void Setup_AUX_ON()
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = 0;
     delay(350);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -72,7 +71,7 @@ void Setup_AUX_ON()
     }
 
     delay(350);
-    NunChuckQuerywithEC();
+    UpdateNunChuck();
   }
 }
 
@@ -97,7 +96,7 @@ void Setup_PAUSE_ENABLED()
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = 0;
     delay(350);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
@@ -105,8 +104,8 @@ void Setup_PAUSE_ENABLED()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -146,7 +145,7 @@ void Setup_PAUSE_ENABLED()
     else
       progstep_backward();
     delay(350);
-    NunChuckQuerywithEC();
+    UpdateNunChuck();
   }
 }
 
@@ -172,7 +171,7 @@ void Setup_POWERSAVE_PT()
     // lcd.at(2,12,"C-Set");
     first_time = 0;
     delay(350);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
@@ -180,8 +179,7 @@ void Setup_POWERSAVE_PT()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -228,7 +226,7 @@ void Setup_POWERSAVE_PT()
     else
       progstep_backward();
     delay(350);
-    NunChuckQuerywithEC();
+    UpdateNunChuck();
   }
 }
 
@@ -254,7 +252,7 @@ void Setup_POWERSAVE_AUX()
     // lcd.at(2,12,"C-Set");
     first_time = 0;
     delay(350);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
@@ -262,8 +260,7 @@ void Setup_POWERSAVE_AUX()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -310,7 +307,7 @@ void Setup_POWERSAVE_AUX()
     else
       progstep_backward();
     delay(350);
-    NunChuckQuerywithEC();
+    UpdateNunChuck();
   }
 }
 
@@ -326,7 +323,7 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = 0;
     delay(250);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
@@ -334,8 +331,7 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -372,13 +368,13 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     // lcd.at(1,1,"Return Main Menu");
     lcd.bright(4);
     // delay(100);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     if (c_button)
       progstep_forward();
     else
       progstep_backward();
     delay(350);
-    NunChuckQuerywithEC();
+    UpdateNunChuck();
   }
 }
 
@@ -394,7 +390,7 @@ void Setup_Max_AUX_Motor_Speed()
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = 0;
     delay(250);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
@@ -402,8 +398,7 @@ void Setup_Max_AUX_Motor_Speed()
   {
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -440,7 +435,7 @@ void Setup_Max_AUX_Motor_Speed()
     else
       progstep_backward();
     delay(350);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last button
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last button
   }
 }
 
@@ -462,15 +457,14 @@ void Setup_AUX_Motor_DIR()
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = 0;
     delay(350);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -508,7 +502,7 @@ void Setup_AUX_Motor_DIR()
     lcd.empty();
     lcd.at(1, 1, "Return Main Menu");
     delay(1500);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last button
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last button
                            // progstep_forward();
     // progstep_goto(0);
     if (c_button)
@@ -537,15 +531,14 @@ void Set_Shot_Repeat()
     // lcd.at(2,12,"C-Set");
     first_time = 0;
     delay(350);
-    NunChuckQuerywithEC(); //  Use this to clear out any button registry from the last step
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
                            // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    NunChuckQuerywithEC();
-    NunChuckjoybuttons();
+    UpdateNunChuck();
   }
 
   yUpDown = joy_capture_y1();
@@ -586,7 +579,7 @@ void Set_Shot_Repeat()
     // lcd.empty();
     progstep_forward();
     delay(350);
-    NunChuckQuerywithEC();
+    UpdateNunChuck();
   }
   else if (z_button)
   {
@@ -597,6 +590,6 @@ void Set_Shot_Repeat()
     // lcd.empty();
     progstep_backward();
     delay(350);
-    NunChuckQuerywithEC();
+    UpdateNunChuck();
   }
 }
