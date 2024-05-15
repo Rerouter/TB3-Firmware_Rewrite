@@ -91,17 +91,8 @@ void Define_Overlap_Percentage()
 
   unsigned int olpercentage_last = olpercentage;
   UpdateNunChuck();
-  if (olpercentage < 20)
-    joy_y_lock_count = 0;
-  olpercentage += joy_capture3();
-  if (olpercentage <= 0)
-  {
-    olpercentage = 1;
-  }
-  if (olpercentage > 99)
-  {
-    olpercentage = 99;
-  }
+
+  olpercentage = updateProgType(olpercentage, joy_capture3(), 1, 99, 1);
 
   if (olpercentage_last != olpercentage)
   {
@@ -207,34 +198,7 @@ void Set_PanoArrayType()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    PanoArrayType++;
-    if (PanoArrayType > PanoArrayTypeOptions)
-    {
-      PanoArrayType = PanoArrayTypeOptions;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == 1)
-  { // down
-    PanoArrayType--;
-    if (PanoArrayType < 1)
-    {
-      PanoArrayType = 1;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
+  PanoArrayType = updateProgType(PanoArrayType, joy_capture_y1(), 0, PanoArrayTypeOptions - 1, 1);
 
   if (PanoArrayType == PANO_9ShotCenter)
   {
@@ -459,17 +423,9 @@ void Pano_DisplayReviewProg()
     // lcd.empty();
     lcd.at(1, 1, "StartDly:    min");
     lcd.at(2, 2, "Press C Button");
-    if (start_delay_sec < 20)
-      joy_y_lock_count = 0;
-    start_delay_sec += joy_capture3();
-    if (start_delay_sec < 0)
-    {
-      start_delay_sec = 500;
-    }
-    if (start_delay_sec > 500)
-    {
-      start_delay_sec = 0;
-    }
+
+    start_delay_sec = updateProgType(start_delay_sec, joy_capture3(), 0, 500, 1);
+
     lcd.at(1, 11, start_delay_sec);
     // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
     // if (start_delay_min <100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1

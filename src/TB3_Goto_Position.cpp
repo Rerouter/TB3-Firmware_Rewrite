@@ -2,7 +2,6 @@
 
 void goto_position(int gotoshot_temp)
 {
-
   // We take stock of where we are and hold temps vars for position and camera shots
   // reset the camera fired
   // run the move, but don't actually move

@@ -163,20 +163,8 @@ void InProg_Select_Option()
   if (inprogtype == INPROG_GOTO_FRAME)
   { // read leftright values for the goto frames
     unsigned int goto_shot_last = goto_shot;
-
-    if (goto_shot < 20)
-      joy_x_lock_count = 0;
-    goto_shot += joy_capture_x3();
-    if (goto_shot < 1)
-    {
-      goto_shot = 1;
-      delay(prompt_time / 2);
-    }
-    else if (goto_shot > camera_total_shots)
-    {
-      goto_shot = camera_total_shots;
-      delay(prompt_time / 2);
-    }
+    
+    goto_shot = updateProgType(goto_shot, joy_capture_x3(), 1, camera_total_shots, 1);
 
     if (goto_shot_last != goto_shot)
     {
@@ -189,45 +177,15 @@ void InProg_Select_Option()
 
     unsigned int intval_last = intval;
 
-    if (intval < 20)
-      joy_x_lock_count = 0;
-    intval += joy_capture_x3();
-    intval = constrain(intval, 5, 6000); // no limits, you can crunch static time
+    intval = updateProgType(intval, joy_capture_x3(), 5, 6000, 1);
+
     if (intval_last != intval)
     {
       DisplayInterval();
     }
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == 1)
-  { //
-    inprogtype++;
-    if (inprogtype > (INPROG_OPTIONS - 1))
-    {
-      inprogtype = (INPROG_OPTIONS - 1);
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == -1)
-  { //
-    inprogtype--;
-    if (inprogtype < 0)
-    {
-      inprogtype = 0;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-
+  inprogtype = updateProgType(inprogtype, joy_capture_y1(), 0, INPROG_OPTIONS - 1, 1);
   if (CZ_Released)
     button_actions_InProg_Select_Option(); // don't react to buttons unless there has been a CZ release
   delay(prompt_delay);

@@ -90,3 +90,4 @@ extern void setupMotorMove(int motorIndex, int32_t destination);
 extern void updateMotorVelocities();
 extern void disable_PT();
 extern void display_status();
+extern int updateProgType(int current, int direction, int minOption, int maxOptions, int stepSize);

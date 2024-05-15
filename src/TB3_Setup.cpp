@@ -28,32 +28,7 @@ void Setup_AUX_ON()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    if (AUX_ON == 0)
-    {
-      AUX_ON = 1;
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == 1)
-  { // down
-    if (AUX_ON == 1)
-    {
-      AUX_ON = 0;
-      first_time = 1;
-      delay(250);
-    }
-  }
-  if (AUX_ON > 1)
-  {
-    AUX_ON = 0;
-    first_time = 1;
-    delay(250);
-  }
+  AUX_ON = updateProgType(AUX_ON, joy_capture_y1(), 0, 1, 1);
 
   if (c_button || z_button)
   {
@@ -108,33 +83,8 @@ void Setup_PAUSE_ENABLED()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    if (PAUSE_ENABLED == 0)
-    {
-      PAUSE_ENABLED = 1;
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == 1)
-  { // down
-    if (PAUSE_ENABLED == 1)
-    {
-      PAUSE_ENABLED = 0;
-      first_time = 1;
-      delay(250);
-    }
-  }
-  if (PAUSE_ENABLED > 1)
-  { // in case bad values for EEPROM
-    PAUSE_ENABLED = 0;
-    first_time = 1;
-    delay(250);
-  }
-
+  PAUSE_ENABLED = updateProgType(PAUSE_ENABLED, joy_capture_y1(), 0, 1, 1);
+  
   if (c_button || z_button)
   {
 
@@ -182,37 +132,7 @@ void Setup_POWERSAVE_PT()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    POWERSAVE_PT++;
-    if (POWERSAVE_PT > 4)
-    {
-      POWERSAVE_PT = 4;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == 1)
-  { // down
-    POWERSAVE_PT--;
-    if (POWERSAVE_PT < 1)
-    {
-      POWERSAVE_PT = 1;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-
-  if (POWERSAVE_PT > 100)
-    POWERSAVE_PT = 2;
+  POWERSAVE_PT = updateProgType(POWERSAVE_PT, joy_capture_y1(), 1, 4, 1);
 
   if (c_button || z_button)
   {
@@ -263,37 +183,7 @@ void Setup_POWERSAVE_AUX()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    POWERSAVE_AUX++;
-    if (POWERSAVE_AUX > 4)
-    {
-      POWERSAVE_AUX = 4;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == 1)
-  { // down
-    POWERSAVE_AUX--;
-    if (POWERSAVE_AUX < 1)
-    {
-      POWERSAVE_AUX = 1;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-
-  if (POWERSAVE_AUX > 100)
-    POWERSAVE_AUX = 2;
+  POWERSAVE_AUX = updateProgType(POWERSAVE_AUX, joy_capture_y1(), 1, 4, 1);
 
   if (c_button || z_button)
   {
@@ -334,29 +224,7 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    LCD_BRIGHTNESS_DURING_RUN++;
-    if (LCD_BRIGHTNESS_DURING_RUN > 8)
-      LCD_BRIGHTNESS_DURING_RUN = 8;
-    lcd.bright(LCD_BRIGHTNESS_DURING_RUN); // this seems to ghost press the C
-    c_button = 0;
-    first_time = 1;
-    // delay(50);
-  }
-
-  else if (yUpDown == 1)
-  { // down
-    LCD_BRIGHTNESS_DURING_RUN--;
-    if (LCD_BRIGHTNESS_DURING_RUN < 1)
-      LCD_BRIGHTNESS_DURING_RUN = 1;
-    lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
-    c_button = 0;
-    first_time = 1;
-    // delay(50);
-  }
+  LCD_BRIGHTNESS_DURING_RUN = updateProgType(LCD_BRIGHTNESS_DURING_RUN, joy_capture_y1(), 1, 8, 1);
 
   if (c_button || z_button)
   {
@@ -401,29 +269,7 @@ void Setup_Max_AUX_Motor_Speed()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    AUX_MAX_JOG_STEPS_PER_SEC += 500;
-    if (AUX_MAX_JOG_STEPS_PER_SEC > 20000)
-      AUX_MAX_JOG_STEPS_PER_SEC = 20000;
-    // lcd.bright(LCD_BRIGHTNESS_DURING_RUN); //this seems to ghost press the C
-    c_button = 0;
-    first_time = 1;
-    // delay(50);
-  }
-
-  else if (yUpDown == 1)
-  { // down
-    AUX_MAX_JOG_STEPS_PER_SEC -= 500;
-    if (AUX_MAX_JOG_STEPS_PER_SEC < 2000)
-      AUX_MAX_JOG_STEPS_PER_SEC = 2000;
-    // lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
-    c_button = 0;
-    first_time = 1;
-    // delay(50);
-  }
+  AUX_MAX_JOG_STEPS_PER_SEC = updateProgType(AUX_MAX_JOG_STEPS_PER_SEC, joy_capture_y1(), 2000, 20000, 500);
 
   if (c_button || z_button)
   {
@@ -467,32 +313,7 @@ void Setup_AUX_Motor_DIR()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    if (AUX_REV == 0)
-    {
-      AUX_REV = 1;
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == 1)
-  { // down
-    if (AUX_REV == 1)
-    {
-      AUX_REV = 0;
-      first_time = 1;
-      delay(250);
-    }
-  }
-  if (AUX_REV > 1)
-  {
-    AUX_REV = 0;
-    first_time = 1;
-    delay(250);
-  }
+  AUX_REV = updateProgType(AUX_REV, joy_capture_y1(), 0, 1, 1);
 
   if (c_button || z_button)
   {
@@ -541,34 +362,7 @@ void Set_Shot_Repeat()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == -1)
-  { //  up
-    sequence_repeat_type++;
-    if (sequence_repeat_type > 1)
-    {
-      sequence_repeat_type = 1;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == 1)
-  { // down
-    sequence_repeat_type--;
-    if (sequence_repeat_type < 0)
-    {
-      sequence_repeat_type = 0;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
+  sequence_repeat_type = updateProgType(sequence_repeat_type, joy_capture_y1(), 0, 1, 1);
 
   if (c_button)
   {

@@ -19,3 +19,4 @@ extern boolean CZ_Released;
 extern int inprogtype;
 
 extern void goto_position(int gotoshot_temp);
+extern int updateProgType(int current, int direction, int minOption, int maxOptions, int stepSize);

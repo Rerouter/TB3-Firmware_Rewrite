@@ -29,6 +29,26 @@ PT_LCD_Buttons - Code for Menus and User Interface
 
 */
 
+// Function to update progtype and wrap it around the menu options
+int updateProgType(int current, int direction, int minOption, int maxOptions, int stepSize) {
+  // Calculate new progtype based on the direction
+  if (direction == 0)
+    return current;
+  else {
+    current += direction * stepSize;
+
+    // Wrap around logic
+    if (current > maxOptions) {
+      current = minOption;  // Wrap around to the first option
+    } else if (current < minOption) {
+      current = maxOptions;  // Wrap around to the last option
+    }
+    delay(250);
+    return current;  // Return the updated progtype
+  }
+}
+
+
 void Choose_Program()
 {
   int yUpDown = 0;
@@ -87,35 +107,7 @@ void Choose_Program()
     UpdateNunChuck();
   }
 
-  yUpDown = joy_capture_y1();
-
-  if (yUpDown == 1)
-  { //
-    progtype++;
-    if (progtype > (MENU_OPTIONS - 1))
-    {
-      progtype = (MENU_OPTIONS - 1);
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (yUpDown == -1)
-  { //
-    progtype--;
-    if (progtype < 0 || progtype > (MENU_OPTIONS - 1))
-    { // now accommodates unsigned int here
-      progtype = 0;
-    }
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-
+  progtype = updateProgType(progtype, joy_capture_y1(), 0, MENU_OPTIONS - 1, 1);
   button_actions_choose_program();
   delay(1);
 }
@@ -681,12 +673,12 @@ void Set_Cam_Interval()
     first_time = 0;
   }
 
-  unsigned int intval_last = intval;
   UpdateNunChuck();
-  if (intval < 20)
-    joy_y_lock_count = 0;
-  intval += joy_capture3();
-  intval = constrain(intval, 2, 6000); // remove the option for Ext Trigger right now
+
+  unsigned int intval_last = intval;
+
+  intval = updateProgType(intval, joy_capture3(), 2, 6000, 1);
+
   if (intval_last != intval)
   {
     DisplayInterval();
@@ -812,18 +804,9 @@ void Set_Duration() // This is really setting frames
   { // video
 
     unsigned int overaldur_last = overaldur;
-    if (overaldur < 11)
-      overaldur += joy_capture3();
-    else
-      overaldur += joy_capture3();
-    if (overaldur <= 0)
-    {
-      overaldur = 10000;
-    }
-    if (overaldur > 10000)
-    {
-      overaldur = 1;
-    }
+
+    overaldur = updateProgType(overaldur, joy_capture3(), 1, 10000, 1);
+    
     if (overaldur_last != overaldur)
     {
       calc_time_remain_dur_sec(overaldur);
@@ -834,19 +817,9 @@ void Set_Duration() // This is really setting frames
   { // sms
 
     unsigned int camera_moving_shots_last = camera_moving_shots;
-    if (camera_moving_shots < 11)
-      camera_moving_shots += joy_capture3();
-    else
-      camera_moving_shots += joy_capture3();
-    if (camera_moving_shots <= 9)
-    {
-      camera_moving_shots = 10000;
-    }
-    if (camera_moving_shots > 10000)
-    {
-      camera_moving_shots = 10;
-    }
-    // camera_moving_shots=constrain(camera_moving_shots,10,10000);
+
+    camera_moving_shots = updateProgType(camera_moving_shots, joy_capture3(), 10, 10000, 1);
+
     camera_total_shots = camera_moving_shots; // we add in lead in lead out later
     if (camera_moving_shots_last != camera_moving_shots)
     {
@@ -939,13 +912,11 @@ void Set_Static_Time()
     first_time = 0;
   }
 
-  unsigned int static_tm_last = static_tm;
   UpdateNunChuck();
 
-  if (static_tm < 20)
-    joy_y_lock_count = 0;
-  static_tm += joy_capture3();
-  static_tm = constrain(static_tm, 1, max_shutter);
+  unsigned int static_tm_last = static_tm;
+
+  static_tm = updateProgType(static_tm, joy_capture3(), 1, max_shutter, 1);
 
   if (static_tm_last != static_tm)
   {
@@ -1042,25 +1013,12 @@ void Set_Ramp()
     first_time = 0;
   }
 
-  unsigned int rampval_last = rampval;
   UpdateNunChuck();
-  if (rampval < 20)
-    joy_y_lock_count = 0;
-  rampval += joy_capture3();
-  if (rampval < 1)
-  {
-    rampval = 1;
-    delay(prompt_time / 2);
-  }
-  // if (rampval>500) {rampval=2;}
 
-  if (rampval * 3 > camera_moving_shots)
-  {                                    // we have an issue where the ramp is to big can be 2/3 of total move, but not more.
-    rampval = camera_moving_shots / 3; // set to 1/3 up and 1/3 down (2/3) of total move)
-    delay(prompt_time / 2);
-  }
+  unsigned int rampval_last = rampval;
 
-  // rampval=constrain(rampval,1,500); //
+  rampval = updateProgType(rampval, joy_capture3(), 1, camera_moving_shots / 3, 1);
+
   if (rampval_last != rampval)
   {
     DisplayRampval();
@@ -1137,8 +1095,8 @@ void Set_LeadIn_LeadOut()
   int joyxysum_last = joy_x_axis + joy_y_axis; // figure out if changing
 
   UpdateNunChuck();
-  cursorpos += joy_capture_x1();
-  cursorpos = constrain(cursorpos, 1, 2);
+
+  cursorpos = updateProgType(cursorpos, joy_capture_x1(), 1, 2, 1);
 
   if (joyxysum_last != (joy_x_axis + joy_y_axis) || abs(joy_x_axis + joy_y_axis) > 10)
   { // check to see if there is an input, otherwise don't update display
@@ -1159,15 +1117,9 @@ void DisplayLeadIn_LeadOut()
   { // update lead in
 
     lcd.cursorOff();
-    lead_in += joy_capture3();
-    if (lead_in < 1)
-    {
-      lead_in = 5000;
-    }
-    if (lead_in > 5000)
-    {
-      lead_in = 1;
-    }
+
+    lead_in = updateProgType(lead_in, joy_capture3(), 1, 5000, 1);
+
     lcd.at(1, 1, lead_in);
 
     if (lead_in < 10)
@@ -1189,15 +1141,9 @@ void DisplayLeadIn_LeadOut()
   { // update leadout
 
     lcd.cursorOff();
-    lead_out += joy_capture3();
-    if (lead_out < 1)
-    {
-      lead_out = 5000;
-    }
-    if (lead_out > 5000)
-    {
-      lead_out = 1;
-    }
+
+    lead_out = updateProgType(lead_out, joy_capture3(), 1, 5000, 1);
+
     lcd.at(1, 9, lead_out);
 
     if (lead_out < 10)
@@ -1432,14 +1378,8 @@ void DisplayReviewProg()
       first_time2 = false;
     }
 
-    if (start_delay_sec < 20)
-      joy_y_lock_count = 0; // this is an unsigned in
-    start_delay_sec += joy_capture3();
-    // if (start_delay_sec<0) {start_delay_sec=0;} //this statement doesn't do anything as this is an unsigned int
-    if (start_delay_sec > 43200)
-    {
-      start_delay_sec = 0;
-    }
+    start_delay_sec = updateProgType(start_delay_sec, joy_capture3(), 0, 43200, 1);
+
     calc_time_remain_dur_sec(start_delay_sec);
     display_time(2, 1);
     // lcd.at(1,11,start_delay_sec);
@@ -2106,12 +2046,10 @@ void Enter_Aux_Endpoint()
     first_time = 0;
   }
 
-  int aux_dist_last = aux_dist;
   UpdateNunChuck();
 
-  aux_dist += joy_capture3();
-  // aux_dist=constrain(aux_dist,-999,999);
-  aux_dist = constrain(aux_dist, -MAX_AUX_MOVE_DISTANCE, MAX_AUX_MOVE_DISTANCE);
+  int aux_dist_last = aux_dist;
+  aux_dist = updateProgType(aux_dist, joy_capture3(), -MAX_AUX_MOVE_DISTANCE, MAX_AUX_MOVE_DISTANCE, 1);
 
   // STEPS_PER_INCH_AUX
 
