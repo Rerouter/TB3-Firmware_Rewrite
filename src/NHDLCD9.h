@@ -52,15 +52,17 @@ public:
    void cursorOff();
 
    // shortcuts for printing at particular positions
-   void at(int row, int col, char);
-   void at(int row, int col, const char[]);
-   void at(int row, int col, uint8_t);
-   void at(int row, int col, int);
-   void at(int row, int col, unsigned int);
-   void at(int row, int col, long);
-   void at(int row, int col, unsigned long);
-   void at(int row, int col, long, int);
-   void at(int row, int col, String);
+    template<typename T>
+    void at(int row, int col, const T& value) {
+        pos(row, col);
+        print(value);
+    }
+    
+    template<typename T>
+    void at(int row, int col, const T& value, int base) {
+        pos(row, col);
+        print(value, base);
+    }
 };
 
 #endif

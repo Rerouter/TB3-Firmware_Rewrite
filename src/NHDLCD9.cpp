@@ -154,7 +154,6 @@ void NHDLCD9::bright(int val)
 
 void NHDLCD9::contrast(int contrastval)
 {
-
 	command(0x52);
 	write((uint8_t)contrastval);
 	delay(_bv[BOUNCE]);
@@ -180,54 +179,6 @@ void NHDLCD9::command(uint8_t value)
 	write(value);
 	// delay(_bv[BOUNCE]);
 	delayMicroseconds(_bv[BOUNCEMicros]); //_bv[BOUNCEMicros]
-}
-
-// shortcuts
-
-void NHDLCD9::at(int row, int col, char v)
-{
-	pos(row, col);
-	print(v);
-}
-void NHDLCD9::at(int row, int col, const char v[])
-{
-	pos(row, col);
-	print(v);
-}
-void NHDLCD9::at(int row, int col, uint8_t v)
-{
-	pos(row, col);
-	print(v);
-}
-void NHDLCD9::at(int row, int col, int v)
-{
-	pos(row, col);
-	print(v);
-}
-void NHDLCD9::at(int row, int col, unsigned int v)
-{
-	pos(row, col);
-	print(v);
-}
-void NHDLCD9::at(int row, int col, long v)
-{
-	pos(row, col);
-	print(v);
-}
-void NHDLCD9::at(int row, int col, unsigned long v)
-{
-	pos(row, col);
-	print(v);
-}
-void NHDLCD9::at(int row, int col, long v, int t)
-{
-	pos(row, col);
-	print(v, t);
-}
-void NHDLCD9::at(int row, int col, String v)
-{
-	pos(row, col);
-	print(v);
 }
 
 /* ======================================================== */

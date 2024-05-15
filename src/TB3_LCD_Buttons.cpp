@@ -1806,6 +1806,24 @@ int joy_capture_y1() // captures joystick input for up down
   return map(joy_y_axis, -85, 85, -1, 1);
 }
 
+int joy_capture_x3_V2() // captures joystick input and conditions it for UI
+{
+  if (abs(joy_x_axis) > 10)
+  { // go variable add delay which we run later
+    uint8_t step_size = joy_x_lock_count / 5;
+    if (step_size == 0) {step_size = 1;}
+    prompt_delay = (500 - 4 * abs(joy_x_axis));
+    if (prompt_delay < 15)
+      prompt_delay = 15;
+    return -1 * constrain(map(-joy_x_axis, -20, 20, -1, 2), -step_size, step_size);
+  }
+  else
+  {
+    prompt_delay = 15;
+    return 0;
+  }
+}
+
 int joy_capture_x3() // captures joystick input and conditions it for UI
 {
 
@@ -1815,7 +1833,7 @@ int joy_capture_x3() // captures joystick input and conditions it for UI
     prompt_delay = 0;
     return -1 * map(-joy_x_axis, -55, 55, -40, 40);
   }
-  if (joy_x_lock_count > 50)
+  else if (joy_x_lock_count > 50)
   { // really fast
     // Serial.println("reallyfast");
     prompt_delay = 10;
@@ -1831,7 +1849,7 @@ int joy_capture_x3() // captures joystick input and conditions it for UI
   else if (abs(joy_x_axis) > 10)
   { // go variable add delay which we run later
     prompt_delay = (500 - 6 * abs(joy_x_axis));
-    if (prompt_delay < 0)
+    if (prompt_delay < 15)
       prompt_delay = 15;
     // Serial.print("slow");Serial.println(prompt_delay);
     return -1 * constrain(map(-joy_x_axis, -20, 20, -1, 2), -1, 1);
