@@ -54,11 +54,14 @@ char WiiNunchuck3::decode_byte(char x)
 {
 // Decode data format that original Nunchuck uses with old init sequence. This never worked with
 // other controllers (e.g. wireless Nunchuck from other vendors)
-#ifndef USE_NEW_WAY_INIT
-	x = (x ^ 0x17) + 0x17;
-#endif
-	return x;
+	if (USE_NEW_WAY_INIT){
+		return x;
+	}
+	else{
+		x = (x ^ 0x17) + 0x17;
+	}
 }
+
 
 int WiiNunchuck3::getData()
 {
@@ -90,7 +93,7 @@ void WiiNunchuck3::init(int power)
 
 	// initialize the I2C system, join the I2C bus,
 	// and tell the nunchuck we're talking to it
-	//unsigned short timeout = 0; // never timeout
+	unsigned short timeout = 0; // never timeout
 	Wire.begin();				// join i2c bus as master
 // we need to switch the TWI speed, because the nunchuck uses Fast-TWI
 // normally set in hardware\libraries\Wire\utility\twi.c twi_init()
@@ -98,37 +101,38 @@ void WiiNunchuck3::init(int power)
 #define TWI_FREQ_NUNCHUCK 400000L
 	TWBR = ((16000000 / TWI_FREQ_NUNCHUCK) - 16) / 2;
 
-#ifndef USE_NEW_WAY_INIT
-	// look at <http://wiibrew.org/wiki/Wiimote#The_Old_Way> at "The Old Way"
-	Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
-												  // Wire.write (0x40); // sends memory address
-	// Wire.write (0x00); // sends sent a zero.
-	Wire.write((uint8_t)64); // this is x40
-	Wire.write((uint8_t)0);	 // sends sent a zero.
-	Wire.endTransmission();	 // stop transmitting
-#else
-	// disable encryption
-	// look at <http://wiibrew.org/wiki/Wiimote#The_New_Way> at "The New Way"
+	if (USE_NEW_WAY_INIT) {
+		// disable encryption
+		// look at <http://wiibrew.org/wiki/Wiimote#The_New_Way> at "The New Way"
 
-	unsigned long time = millis();
-	byte rc = 1;
-	do
-	{
-		Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
-		Wire.write((uint8_t)0xF0);					  // sends memory address
-		Wire.write((uint8_t)0x55);					  // sends data.
-		if (Wire.endTransmission() == 0)			  // stop transmitting
+		unsigned long time = millis();
+		byte rc = 1;
+		do
 		{
 			Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
-			Wire.write((uint8_t)0xFB);					  // sends memory address
-			Wire.write((uint8_t)0x00);					  // sends sent a zero.
+			Wire.write((uint8_t)0xF0);					  // sends memory address
+			Wire.write((uint8_t)0x55);					  // sends data.
 			if (Wire.endTransmission() == 0)			  // stop transmitting
 			{
-				rc = 0;
+				Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
+				Wire.write((uint8_t)0xFB);					  // sends memory address
+				Wire.write((uint8_t)0x00);					  // sends sent a zero.
+				if (Wire.endTransmission() == 0)			  // stop transmitting
+				{
+					rc = 0;
+				}
 			}
-		}
-	} while (rc != 0 && (!timeout || ((millis() - time) < timeout)));
-#endif
+		} while (rc != 0 && (!timeout || ((millis() - time) < timeout)));
+	}
+	else {
+		// look at <http://wiibrew.org/wiki/Wiimote#The_Old_Way> at "The Old Way"
+		Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
+													// Wire.write (0x40); // sends memory address
+		// Wire.write (0x00); // sends sent a zero.
+		Wire.write((uint8_t)64); // this is x40
+		Wire.write((uint8_t)0);	 // sends sent a zero.
+		Wire.endTransmission();	 // stop transmitting
+	}
 	// Sometimes the first request seems to get garbage data.
 	// Get some data now so when the main program calls getData(), it will get good data.
 	getData();

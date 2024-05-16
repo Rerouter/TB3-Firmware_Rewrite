@@ -7,6 +7,7 @@
 #include "TB3_Motor_Control.h"
 #include "TB3_EEPROM.h"
 #include "TB3_PANO.h"
+#include "WiiNunchuck3.h"
 
 void Choose_Program();
 void button_actions_choose_program();
@@ -62,8 +63,8 @@ void button_actions_Enter_Aux_Endpoint();
 extern unsigned long Tilt_AOV_steps;
 extern const uint8_t PINOUT_VERSION;
 extern const int16_t MAX_AUX_MOVE_DISTANCE;
-extern float joy_x_axis;
-extern float accel_x_axis;
+extern int joy_x_axis;
+extern int accel_x_axis;
 extern unsigned long Pan_AOV_steps;
 extern const uint8_t EXTTRIG_INTVAL;
 extern const uint8_t MIN_INTERVAL_STATIC_GAP;

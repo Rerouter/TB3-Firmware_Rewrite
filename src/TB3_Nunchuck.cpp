@@ -20,8 +20,8 @@ void calibrate_joystick(int tempx, int tempy)
   joy_x_axis_Offset = tempx;
   joy_y_axis_Offset = tempy;
   accel_x_axis_Offset = 512;
-  joy_x_axis_Threshold = min(abs(127 - joy_x_axis_Offset), abs(-128 - joy_x_axis_Offset));
-  joy_y_axis_Threshold = min(abs(127 - joy_y_axis_Offset), abs(-128 - joy_y_axis_Offset));
+  joy_x_axis_Threshold = 127 - abs(127 - joy_x_axis_Offset);
+  joy_y_axis_Threshold = 127 - abs(127 - joy_y_axis_Offset);
 }
 
 void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes about 1050 microsecond
@@ -75,7 +75,7 @@ void UpdateNunChuck()
   if (AUX_REV)
     accel_x_axis *= -1;
 
-  // create a deadband
+  //create a deadband
   joy_x_axis   = joystick_deadband(joy_x_axis, joy_deadband);
   joy_y_axis   = joystick_deadband(joy_y_axis, joy_deadband);
   accel_x_axis   = joystick_deadband(accel_x_axis, acc_deadband);
@@ -94,9 +94,9 @@ void UpdateNunChuck()
 void applyjoymovebuffer_exponential() // exponential stuff
 {
   // scale based on read frequency  base is 500 reads per second  - now 20 reads per second = 25x
-  joy_x_axis = (joy_x_axis * joy_x_axis * joy_x_axis) / 1200L;
-  joy_y_axis = (joy_y_axis * joy_y_axis * joy_y_axis) / 1200L;
-  accel_x_axis = (accel_x_axis * accel_x_axis * accel_x_axis) / 300L;
+  float joy_x = (long(joy_x_axis) * joy_x_axis * joy_x_axis) / 1200L;
+  float joy_y = (long(joy_y_axis) * joy_y_axis * joy_y_axis) / 1200L;
+  float accel_x = (long(accel_x_axis) * accel_x_axis * accel_x_axis) / 300L;
   // joy_x_axis=(joy_x_axis*joy_x_axis)/4;
   // joy_y_axis*=25;
   // accel_x_axis*=25;
@@ -113,42 +113,42 @@ void applyjoymovebuffer_exponential() // exponential stuff
   // if ((joy_x_axis-prev_joy_x_reading)>ss_buffer) joy_x_axis=(prev_joy_x_reading+ss_buffer);
   // else if ((joy_x_axis-prev_joy_x_reading)<-ss_buffer) joy_x_axis=(prev_joy_x_reading-ss_buffer);
 
-  buffer_x = (joy_x_axis - prev_joy_x_reading) / 5;
-  joy_x_axis = prev_joy_x_reading + buffer_x;
-  if (abs(joy_x_axis) < 5)
-    joy_x_axis = 0;
+  buffer_x = (joy_x - prev_joy_x_reading) / 5;
+  joy_x = prev_joy_x_reading + buffer_x;
+  if (abs(joy_x) < 5)
+    joy_x = 0;
 
   // if ((joy_y_axis-prev_joy_y_reading)>ss_buffer) joy_y_axis=(prev_joy_y_reading+ss_buffer);
   // else if ((joy_y_axis-prev_joy_y_reading)<-ss_buffer) joy_y_axis=(prev_joy_y_reading-ss_buffer);
 
-  buffer_y = (joy_y_axis - prev_joy_y_reading) / 5;
-  joy_y_axis = prev_joy_y_reading + buffer_y;
-  if (abs(joy_y_axis) < 5)
-    joy_y_axis = 0;
+  buffer_y = (joy_y - prev_joy_y_reading) / 5;
+  joy_y = prev_joy_y_reading + buffer_y;
+  if (abs(joy_y) < 5)
+    joy_y = 0;
 
   // if ((accel_x_axis-prev_accel_x_reading)>ss_buffer) accel_x_axis=(prev_accel_x_reading+ss_buffer);
   // else if ((accel_x_axis-prev_accel_x_reading)<-ss_buffer) accel_x_axis=(prev_accel_x_reading-ss_buffer);
 
-  buffer_z = (accel_x_axis - prev_accel_x_reading) / 2;
-  accel_x_axis = prev_accel_x_reading + buffer_z;
-  if (abs(accel_x_axis) < 5)
-    accel_x_axis = 0;
+  buffer_z = (accel_x - prev_accel_x_reading) / 2;
+  accel_x = prev_accel_x_reading + buffer_z;
+  if (abs(accel_x) < 5)
+    accel_x = 0;
 
   // Serial.print(joy_x_axis);Serial.print(" ___ ");Serial.println(joy_y_axis);
 
-  prev_joy_x_reading = joy_x_axis;
-  prev_joy_y_reading = joy_y_axis;
-  prev_accel_x_reading = accel_x_axis;
+  prev_joy_x_reading = joy_x;
+  prev_joy_y_reading = joy_y;
+  prev_accel_x_reading = accel_x;
 
   // FloatPoint fp;
   // fp.x = 0.0;
   // fp.y = 0.0;
   // fp.z = 0.0;
 
-  fp.x = joy_x_axis + current_steps.x;
-  fp.y = joy_y_axis + current_steps.y;
+  fp.x = joy_x + current_steps.x;
+  fp.y = joy_y + current_steps.y;
   if (AUX_ON)
-    fp.z = accel_x_axis + current_steps.z;
+    fp.z = accel_x + current_steps.z;
 
   set_target(fp.x, fp.y, fp.z);
   feedrate_micros = calculate_feedrate_delay_2();
@@ -225,9 +225,9 @@ void updateMotorVelocities2() // Happens  20 times a second
   // could also make accel dynamic based on velocity - decelerate faster when going fast - have to make sure we don't create hyperbole
 
   // exponential curve
-  joy_x_axis = float(joy_x_axis * joy_x_axis * joy_x_axis) / 10000.0;
-  joy_y_axis = float(joy_y_axis * joy_y_axis * joy_y_axis) / 10000.0;
-  accel_x_axis = float(accel_x_axis * accel_x_axis * accel_x_axis) / 10000.0;
+  float joy_x = float(long(joy_x_axis) * joy_x_axis * joy_x_axis) / 10000.0;
+  float joy_y = float(long(joy_y_axis) * joy_y_axis * joy_y_axis) / 10000.0;
+  float accel_x = float(long(accel_x_axis) * accel_x_axis * accel_x_axis) / 10000.0;
 
   // record last speed for compare, multiply by direction to get signed value
   float signedlastMotorMoveSpeed0 = motors[0].nextMotorMoveSpeed;
@@ -241,9 +241,9 @@ void updateMotorVelocities2() // Happens  20 times a second
     signedlastMotorMoveSpeed2 *= -1.0;
 
   // set the accumulator value for the 1/20th second move - this is our accumulator value
-  float signedMotorMoveSpeedTarget0 = joy_x_axis * 655.3 * motormax0;
-  float signedMotorMoveSpeedTarget1 = joy_y_axis * 655.3 * motormax1;
-  float signedMotorMoveSpeedTarget2 = accel_x_axis * 655.3 * motormax2;
+  float signedMotorMoveSpeedTarget0 = joy_x * 655.3 * motormax0;
+  float signedMotorMoveSpeedTarget1 = joy_y * 655.3 * motormax1;
+  float signedMotorMoveSpeedTarget2 = accel_x * 655.3 * motormax2;
 
   // pan accel
   if (signedMotorMoveSpeedTarget0 != signedlastMotorMoveSpeed0)

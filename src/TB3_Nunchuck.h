@@ -19,9 +19,9 @@ inline int JoystickLockCounter(int lockCount, int joyAxisValue, int threshold);
 #endif
 
 
-extern float joy_x_axis;
-extern float joy_y_axis;
-extern float accel_x_axis;
+extern int joy_x_axis;
+extern int joy_y_axis;
+extern int accel_x_axis;
 extern boolean AUX_REV;
 extern boolean AUX_ON;
 extern unsigned int joy_x_lock_count;

@@ -40,14 +40,8 @@ int updateProgType(int current, int direction, int minOption, int maxOptions, in
     current += direction * stepSize;
 
     // Wrap around logic
-    if (current > maxOptions)
-    {
-      current = minOption; // Wrap around to the first option
-    }
-    else if (current < minOption)
-    {
-      current = maxOptions; // Wrap around to the last option
-    }
+    if (current > maxOptions)     { current = minOption; }
+    else if (current < minOption) { current = maxOptions; }
     delay(250);
     return current; // Return the updated progtype
   }
@@ -55,8 +49,6 @@ int updateProgType(int current, int direction, int minOption, int maxOptions, in
 
 void Choose_Program()
 {
-  // int displayvar=0;
-
   if (first_time)
   {
     lcd.empty();
@@ -93,35 +85,31 @@ void Choose_Program()
     else
       lcd.at(1, 2, "errors");
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
+    
     first_time = false;
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     if (POWERSAVE_PT > 2)
       disable_PT();
     if (POWERSAVE_AUX > 2)
       disable_AUX();
-
-    // delay(prompt_time);
+    delay(prompt_time);
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
-  }
 
-  progtype = updateProgType(progtype, joy_capture_y1(), 0, MENU_OPTIONS - 1, 1);
-  button_actions_choose_program();
-  delay(1);
+    auto lastprogtype = progtype;
+    progtype = updateProgType(progtype, joy_capture_y1(), 0, MENU_OPTIONS - 1, 1);
+    if (lastprogtype != progtype) {first_time = true;}
+    button_actions_choose_program();
+  }
 }
 
 void button_actions_choose_program()
 {
-  switch (c_button)
-  {
-
-  case 1: // c on - use stored values
-    lcd.empty();
+  if (c_button) {
     lcd.empty();
     if (progtype == REG2POINTMOVE)
     { // new 2 point move
@@ -213,19 +201,6 @@ void button_actions_choose_program()
       lcd.empty();
       progstep_goto(211);
     }
-
-    break;
-  case 0:
-    switch (z_button) // do nothing
-    {
-    case 1: // z button on -
-      // progtype=0;
-      // progstep_goto(0);
-      delay(1);
-      break;
-    }
-  default:
-    break;
   }
 }
 
@@ -478,10 +453,6 @@ void Move_to_Point_X(int Point)
 {
   if (first_time)
   {
-
-    // prev_joy_x_reading=0; //prevents buffer from moving axis from previous input
-    // prev_joy_y_reading=0;
-
     lcd.empty();
     draw(10, 1, 1); // lcd.at(1,1,"Move to Point");
     if (!REVERSE_PROG_ORDER)

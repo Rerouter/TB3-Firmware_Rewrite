@@ -38,7 +38,7 @@ extern long NClastread;
 extern unsigned int camera_total_shots;
 extern unsigned long diplay_last_tm;
 extern int reviewprog;
-extern float joy_y_axis;
+extern int joy_y_axis;
 extern unsigned int intval;
 extern unsigned int static_tm;
 extern unsigned long interval;

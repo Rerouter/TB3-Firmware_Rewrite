@@ -160,7 +160,7 @@ unsigned long interval_tm = 0;         // mc time to help with interval comparis
 unsigned long interval_tm_last = 0;    // mc time to help with interval comparison
 unsigned int lcd_dim_tm = 10;
 unsigned long diplay_last_tm = 0;
-unsigned int prompt_time = 500; // in ms for delays of instructions
+unsigned int prompt_time = 350; // in ms for delays of instructions
 // unsigned int  prompt_time=350; // for faster debugging
 int prompt_delay = 0; // to help with joystick reads and delays for inputs - this value is set during joystick read and executed later in the loop
 int prompt_val;
@@ -172,9 +172,9 @@ int sequence_repeat_type = 1;  // 1 Defaults - Run Once, 0 Continuous Loop,  -1 
 
 // remote and interface variables
 
-float joy_x_axis;
-float joy_y_axis;
-float accel_x_axis;
+int joy_x_axis;
+int joy_y_axis;
+int accel_x_axis;
 
 int PanStepCount;
 int TiltStepCount;
@@ -404,7 +404,7 @@ void setup()
   delay(50);
   for (int reads = 1; reads < 17; reads++)
   {
-    Nunchuck.getData();
+    UpdateNunChuck();
     // Nunchuck.printData();
     lcd.at(2, reads, "+");
     if (abs(Nunchuck.joyx() - 127) > 60 || abs(Nunchuck.joyy() - 127) > 60)

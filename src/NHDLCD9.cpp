@@ -46,7 +46,7 @@ void NHDLCD9::setup(int startPcnt, boolean startEmpty)
 {
 	pinMode(_bv[PINOUT], OUTPUT);
 	delay(_bv[BOUNCE]);
-	begin(9600);
+	begin(56700);
 	delay(_bv[BOUNCE]);
 	if (startEmpty)
 	{

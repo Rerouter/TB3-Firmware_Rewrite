@@ -195,6 +195,7 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
   if (first_time)
   {
     lcd.empty();
+    lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
     lcd.at(1, 1, "BkLite On Run: ");
     lcd.at(1, 15, LCD_BRIGHTNESS_DURING_RUN);
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
