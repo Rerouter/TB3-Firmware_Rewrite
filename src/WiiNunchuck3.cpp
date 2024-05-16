@@ -8,9 +8,7 @@ const uint8_t WII_NUNCHUCK_TWI_ADR = 0x52;
 
 const boolean DEBUG = false; // Use serial port debugging if defined.
 
-WiiNunchuck3::WiiNunchuck3()
-{
-}
+WiiNunchuck3::WiiNunchuck3() {}
 
 void WiiNunchuck3::send_zero()
 {
@@ -150,16 +148,16 @@ void WiiNunchuck3::printData()
 	int accel_y_axis = nunchuck_buf[3] * 2 * 2;
 	int accel_z_axis = nunchuck_buf[4] * 2 * 2;
 
-	int z_button = 0;
-	int c_button = 0;
+	boolean z_button = false;
+	boolean c_button = false;
 
 	// byte nunchuck_buf[5] contains bits for z and c buttons
 	// it also contains the least significant bits for the accelerometer data
 	// so we have to check each bit of byte outbuf[5]
 	if ((nunchuck_buf[5] >> 0) & 1)
-		z_button = 1;
+		z_button = true;
 	if ((nunchuck_buf[5] >> 1) & 1)
-		c_button = 1;
+		c_button = true;
 
 	if ((nunchuck_buf[5] >> 2) & 1)
 		accel_x_axis += 2;

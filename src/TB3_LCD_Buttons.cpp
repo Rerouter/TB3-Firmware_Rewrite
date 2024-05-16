@@ -5,13 +5,13 @@ const uint8_t MENU_OPTIONS = 8;
 int prev_joy_x_reading = 0;
 int prev_joy_y_reading = 0;
 unsigned int video_sample_ms = 100;
-unsigned int video_segments = 150;  // arbitrary
+unsigned int video_segments = 150; // arbitrary
 unsigned int max_shutter;
-int cursorpos = 1;                     // use 1 for left, 2 for right  - used for lead in, lead out
+int cursorpos = 1; // use 1 for left, 2 for right  - used for lead in, lead out
 boolean first_time2 = true;
 int sequence_repeat_count = 0; // counter to hold variable for how many time we have repeated
 
-boolean reset_prog = 1;              // used to handle program reset or used stored
+boolean reset_prog = 1;             // used to handle program reset or used stored
 const boolean POWERDOWN_LV = false; // set this to cause the TB3 to power down below 10 volts
 int batt_low_cnt = 0;
 int aux_dist;
@@ -30,31 +30,34 @@ PT_LCD_Buttons - Code for Menus and User Interface
 */
 
 // Function to update progtype and wrap it around the menu options
-int updateProgType(int current, int direction, int minOption, int maxOptions, int stepSize) {
+int updateProgType(int current, int direction, int minOption, int maxOptions, int stepSize)
+{
   // Calculate new progtype based on the direction
   if (direction == 0)
     return current;
-  else {
+  else
+  {
     current += direction * stepSize;
 
     // Wrap around logic
-    if (current > maxOptions) {
-      current = minOption;  // Wrap around to the first option
-    } else if (current < minOption) {
-      current = maxOptions;  // Wrap around to the last option
+    if (current > maxOptions)
+    {
+      current = minOption; // Wrap around to the first option
+    }
+    else if (current < minOption)
+    {
+      current = maxOptions; // Wrap around to the last option
     }
     delay(250);
-    return current;  // Return the updated progtype
+    return current; // Return the updated progtype
   }
 }
 
-
 void Choose_Program()
 {
-  int yUpDown = 0;
   // int displayvar=0;
 
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     if (progtype == REG2POINTMOVE)
@@ -90,7 +93,7 @@ void Choose_Program()
     else
       lcd.at(1, 2, "errors");
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
-    first_time = 0;
+    first_time = false;
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     if (POWERSAVE_PT > 2)
       disable_PT();
@@ -229,7 +232,7 @@ void button_actions_choose_program()
 // Move to Start Point
 void Move_to_Startpoint()
 {
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     lcd.bright(6);
@@ -244,9 +247,9 @@ void Move_to_Startpoint()
       draw(3, 2, 1);  // lcd.at(2,1,CZ1);
     }
 
-    first_time = 0;
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+    first_time = false;
     delay(prompt_time);
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // prev_joy_x_reading=0; //prevents buffer from moving axis from previous input
     // prev_joy_y_reading=0;
     joy_x_axis = 0;
@@ -328,7 +331,7 @@ void button_actions_move_start()
 
 void Move_to_Endpoint()
 {
-  if (first_time == 1)
+  if (first_time)
   {
     prev_joy_x_reading = 0; // prevents buffer from moving axis from previous input
     prev_joy_y_reading = 0;
@@ -347,7 +350,7 @@ void Move_to_Endpoint()
       draw(14, 2, 6); // lcd.at(2,6,"C-Next");
     }
 
-    first_time = 0;
+    first_time = false;
     joy_x_axis = 0;
     joy_y_axis = 0;
     accel_x_axis = 0;
@@ -473,7 +476,7 @@ void button_actions_move_end()
 
 void Move_to_Point_X(int Point)
 {
-  if (first_time == 1)
+  if (first_time)
   {
 
     // prev_joy_x_reading=0; //prevents buffer from moving axis from previous input
@@ -513,7 +516,7 @@ void Move_to_Point_X(int Point)
     else
       draw(3, 2, 1); // lcd.at(2,1,CZ1);
 
-    first_time = 0;
+    first_time = false;
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     joy_x_axis = 0;
@@ -535,132 +538,111 @@ void Move_to_Point_X(int Point)
 
 void button_actions_move_x(int Point)
 {
-
-  switch (c_button)
+  if (c_button && !z_button)
   {
+    // begin to stop the motors
+    // this puts input to zero to allow a stop
+    joy_x_axis = 0.0;
+    joy_y_axis = 0.0;
+    ;
+    accel_x_axis = 0.0;
 
-  case 1: // con
-    switch (z_button)
+    do // run this loop until the motors stop
     {
-    case 1: // con zon
-      break;
-
-    case 0: // con zoff
-
-      // begin to stop the motors
-      // this puts input to zero to allow a stop
-      joy_x_axis = 0.0;
-      joy_y_axis = 0.0;
-      ;
-      accel_x_axis = 0.0;
-
-      do // run this loop until the motors stop
+      // Serial.print("motorMoving:");Serial.println(motorMoving);
+      if (!nextMoveLoaded)
       {
-        // Serial.print("motorMoving:");Serial.println(motorMoving);
-        if (!nextMoveLoaded)
-        {
-          updateMotorVelocities2();
-        }
-      } while (motorMoving);
+        updateMotorVelocities2();
+      }
+    } while (motorMoving);
 
-      // end stop the motors
+    // end stop the motors
 
+    if (Point == 0)
+      set_position(0.0, 0.0, 0.0); // reset for home position
+
+    motor_steps_pt[Point][0] = current_steps.x; // now signed storage
+    motor_steps_pt[Point][1] = current_steps.y;
+    motor_steps_pt[Point][2] = current_steps.z;
+    if (DEBUG_MOTOR)
+    {
+      Serial.print("motor_steps_point ");
+      Serial.print(Point);
+      Serial.print(";");
+      Serial.print(motor_steps_pt[Point][0]);
+      Serial.print(",");
+      Serial.print(motor_steps_pt[Point][1]);
+      Serial.print(",");
+      Serial.print(motor_steps_pt[Point][2]);
+      Serial.println();
+    }
+
+    lcd.empty();
+    draw(63, 1, 3); // lcd.at(1,3,"Point X Set";);
+    if (!REVERSE_PROG_ORDER)
+      lcd.at(1, 9, (Point + 1)); // Normal
+    else                         // reverse programming
+    {
       if (Point == 0)
-        set_position(0.0, 0.0, 0.0); // reset for home position
-
-      motor_steps_pt[Point][0] = current_steps.x; // now signed storage
-      motor_steps_pt[Point][1] = current_steps.y;
-      motor_steps_pt[Point][2] = current_steps.z;
-      if (DEBUG_MOTOR)
-      {
-        Serial.print("motor_steps_point ");
-        Serial.print(Point);
-        Serial.print(";");
-        Serial.print(motor_steps_pt[Point][0]);
-        Serial.print(",");
-        Serial.print(motor_steps_pt[Point][1]);
-        Serial.print(",");
-        Serial.print(motor_steps_pt[Point][2]);
-        Serial.println();
-      }
-
-      lcd.empty();
-      draw(63, 1, 3); // lcd.at(1,3,"Point X Set";);
-      if (!REVERSE_PROG_ORDER)
-        lcd.at(1, 9, (Point + 1)); // Normal
-      else                         // reverse programming
-      {
-        if (Point == 0)
-          lcd.at(1, 9, "3");
-        else if (Point == 1)
-          lcd.at(1, 9, "2");
-        else if (Point == 2)
-          lcd.at(1, 9, "1");
-      }
-
-      if (progstep == 202 || progstep == 212) // set angle of view UD050715
-      {
-        Pan_AOV_steps = abs(current_steps.x);  // Serial.println(Pan_AOV_steps);
-        Tilt_AOV_steps = abs(current_steps.y); // Serial.println(Tilt_AOV_steps);
-        lcd.empty();
-        lcd.at(1, 5, "AOV Set");
-      }
-      if (progstep == 205) // pano - calculate other values UD050715
-      {
-        calc_pano_move();
-      }
-      if (progstep == 214) // PORTRAITPANO Method UD050715
-      {
-        lcd.empty();
-        lcd.at(1, 4, "Center Set");
-      }
-      if (progstep == 215) // PORTRAITPANO UD050715
-      {
-      }
-
-      delay(prompt_time);
-      progstep_forward();
-      break;
+        lcd.at(1, 9, "3");
+      else if (Point == 1)
+        lcd.at(1, 9, "2");
+      else if (Point == 2)
+        lcd.at(1, 9, "1");
     }
-  case 0: // coff
-    switch (z_button)
+
+    if (progstep == 202 || progstep == 212) // set angle of view UD050715
     {
-    case 1: // coff zon
-      // this puts input to zero to allow a stop
-      joy_x_axis = 0.0;
-      joy_y_axis = 0.0;
-      ;
-      accel_x_axis = 0.0;
-
-      do // run this loop until the motors stop
-      {
-        // Serial.print("motorMoving:");Serial.println(motorMoving);
-        if (!nextMoveLoaded)
-        {
-          updateMotorVelocities2();
-        }
-      } while (motorMoving);
-      delay(1);
-      UpdateNunChuck();
-      if (z_button)
-      {
-        progstep_backward();
-      }
-      else
-        break;
-    case 0: // coff zoff
-      break;
+      Pan_AOV_steps = abs(current_steps.x);  // Serial.println(Pan_AOV_steps);
+      Tilt_AOV_steps = abs(current_steps.y); // Serial.println(Tilt_AOV_steps);
+      lcd.empty();
+      lcd.at(1, 5, "AOV Set");
     }
-    break;
-  default:
-    break;
+    if (progstep == 205) // pano - calculate other values UD050715
+    {
+      calc_pano_move();
+    }
+    if (progstep == 214) // PORTRAITPANO Method UD050715
+    {
+      lcd.empty();
+      lcd.at(1, 4, "Center Set");
+    }
+    if (progstep == 215) // PORTRAITPANO UD050715
+    {
+    }
+
+    delay(prompt_time);
+    progstep_forward();
+  }
+
+  if (z_button && !c_button)
+  {
+    // this puts input to zero to allow a stop
+    joy_x_axis = 0.0;
+    joy_y_axis = 0.0;
+    accel_x_axis = 0.0;
+
+    do // run this loop until the motors stop
+    {
+      // Serial.print("motorMoving:");Serial.println(motorMoving);
+      if (!nextMoveLoaded)
+      {
+        updateMotorVelocities2();
+      }
+    } while (motorMoving);
+    delay(1);
+    UpdateNunChuck();
+    if (z_button)
+    {
+      progstep_backward();
+    }
   }
 }
 
 // Set Camera Interval
 void Set_Cam_Interval()
 {
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     draw(17, 1, 1); // lcd.at(1,1,"Set Sht Interval");
@@ -670,19 +652,14 @@ void Set_Cam_Interval()
     draw(18, 1, 1); // lcd.at(1,1,"Intval:   .  sec");
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
     DisplayInterval();
-    first_time = 0;
+    first_time = false;
   }
 
   UpdateNunChuck();
 
   unsigned int intval_last = intval;
-
   intval = updateProgType(intval, joy_capture3(), 2, 6000, 1);
-
-  if (intval_last != intval)
-  {
-    DisplayInterval();
-  }
+  if (intval_last != intval) { DisplayInterval(); }
 
   button_actions_intval(intval); // read buttons, look for c button press to set interval
   delay(70);
@@ -771,13 +748,13 @@ void button_actions_intval(unsigned int intval)
 
 void Set_Duration() // This is really setting frames
 {
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     //          1234567890123456
     draw(32, 1, 5); // lcd.at(1,5,    "Set Move");
     draw(33, 2, 5); // lcd.at(2,5,    "Duration");
-    delay(prompt_time * 1.5);
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(34, 1, 10); // lcd.at(1,9,"H:MM:SS");
@@ -795,7 +772,7 @@ void Set_Duration() // This is really setting frames
     }
     camera_total_shots = camera_moving_shots;
     // Display_Duration();
-    first_time = 0;
+    first_time = false;
   }
 
   UpdateNunChuck();
@@ -806,7 +783,7 @@ void Set_Duration() // This is really setting frames
     unsigned int overaldur_last = overaldur;
 
     overaldur = updateProgType(overaldur, joy_capture3(), 1, 10000, 1);
-    
+
     if (overaldur_last != overaldur)
     {
       calc_time_remain_dur_sec(overaldur);
@@ -894,7 +871,7 @@ void button_actions_overaldur()
 
 void Set_Static_Time()
 {
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     draw(22, 1, 1); // lcd.at(1,1,"Set Static Time");
@@ -909,7 +886,7 @@ void Set_Static_Time()
     if (progtype == PANOGIGA || progtype == PORTRAITPANO)
       max_shutter = 1000; // pano mode - allows
     DisplayStatic_tm();
-    first_time = 0;
+    first_time = false;
   }
 
   UpdateNunChuck();
@@ -994,7 +971,7 @@ void button_actions_stat_time(unsigned int exposure)
 
 void Set_Ramp()
 {
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     draw(29, 1, 1); // lcd.at(1,1,"    Set Ramp");
@@ -1010,7 +987,7 @@ void Set_Ramp()
 
     draw(3, 2, 1); // lcd.at(2,1,CZ1);
     DisplayRampval();
-    first_time = 0;
+    first_time = false;
   }
 
   UpdateNunChuck();
@@ -1076,7 +1053,7 @@ void button_actions_rampval()
 void Set_LeadIn_LeadOut()
 {
 
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     draw(36, 1, 1); // lcd.at(1,1,"Set Static Lead");
@@ -1086,7 +1063,7 @@ void Set_LeadIn_LeadOut()
     lcd.empty();
     draw(38, 1, 6); // lcd.at(1,1,"IN -    Out");
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
-    first_time = 0;
+    first_time = false;
     lcd.at(1, 9, lead_out);
     cursorpos = 1;
     DisplayLeadIn_LeadOut();
@@ -1297,7 +1274,7 @@ void Calculate_Shot() // this used to reside in LeadInLeadout, but now pulled.
 void Review_Confirm()
 {
 
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     draw(41, 1, 4); // lcd.at(1,4,"Review and");
@@ -1307,7 +1284,7 @@ void Review_Confirm()
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(100);
     lcd.empty();
-    first_time = 0;
+    first_time = false;
     diplay_last_tm = millis();
     DisplayReviewProg();
     reviewprog = 2;
@@ -1453,7 +1430,7 @@ void button_actions_review()
       lcd.at(1, 1, "Waiting for Trig");
     }
 
-    first_time = 1;
+    first_time = true;
     lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
     break;
 
@@ -1480,7 +1457,7 @@ void button_actions_review()
 
 void progstep_forward()
 {
-  first_time = 1;
+  first_time = true;
   progstep_forward_dir = true;
   progstep++;
   delay(100);
@@ -1489,7 +1466,7 @@ void progstep_forward()
 
 void progstep_backward()
 {
-  first_time = 1;
+  first_time = true;
   progstep_forward_dir = false;
   if (progstep > 0)
     progstep--;
@@ -1502,7 +1479,7 @@ void progstep_backward()
 void progstep_goto(unsigned int prgstp)
 {
   lcd.empty();
-  first_time = 1;
+  first_time = true;
   progstep = prgstp;
   delay(100);
   UpdateNunChuck(); //  Use this to clear out any button registry from the last step
@@ -1645,7 +1622,7 @@ else if (intval==EXTTRIG_INTVAL)  { //manual trigger/ext trigge
      lcd.at(1,1,"Waiting for Trig");
   }
   */
-  first_time = 1;
+  first_time = true;
   lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
 
 } // end of 91
@@ -1751,7 +1728,10 @@ int joy_capture_x3_V2() // captures joystick input and conditions it for UI
   if (abs(joy_x_axis) > 10)
   { // go variable add delay which we run later
     uint8_t step_size = joy_x_lock_count / 5;
-    if (step_size == 0) {step_size = 1;}
+    if (step_size == 0)
+    {
+      step_size = 1;
+    }
     prompt_delay = (500 - 4 * abs(joy_x_axis));
     if (prompt_delay < 15)
       prompt_delay = 15;
@@ -1808,7 +1788,7 @@ void display_status()
   // 1234567890123456
   // XXXX/XXXX LeadIn      LeadOT Rampup RampDn, Pause
   // HH:MM:SS  XX.XXV
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     lcd.at(1, 5, "/"); // Add to one time display update
@@ -1816,7 +1796,7 @@ void display_status()
     lcd.at(2, 16, "v");
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // lcd.empty();
-    first_time = 0;
+    first_time = false;
   }
   // update upper left camera fired/total shots
   unsigned int camera_fired_display = camera_fired + 1;
@@ -1945,7 +1925,7 @@ void display_status()
         draw(61, 2, 1); // lcd.at(2,1,"  to continue");
       }
 
-      first_time = 1;
+      first_time = true;
     }
     else
       batt_low_cnt = 0;
@@ -2009,7 +1989,7 @@ void display_time(int row, int col)
 
 void draw(int array_num, int col, int row)
 {
-  char lcdbuffer1[20]; // this used to be 16, but increased to 20 do to overflow when we moved to Arduino 1.6 (stalled and failed)
+  char lcdbuffer1[20];                                                 // this used to be 16, but increased to 20 do to overflow when we moved to Arduino 1.6 (stalled and failed)
   strcpy_P(lcdbuffer1, (PGM_P)pgm_read_word(&(setup_str[array_num]))); // Necessary casts and dereferencing, just copy.
   lcd.at(col, row, lcdbuffer1);
 }
@@ -2018,7 +1998,7 @@ void draw(int array_num, int col, int row)
 
 void Enter_Aux_Endpoint()
 {
-  if (first_time == 1)
+  if (first_time)
   {
 
     // routine for just moving to end point if nothing was stored.
@@ -2043,7 +2023,7 @@ void Enter_Aux_Endpoint()
     // delay(prompt_time)
     aux_dist = int((current_steps.z * 10) / STEPS_PER_INCH_AUX); // t
     DisplayAUX_Dist();
-    first_time = 0;
+    first_time = false;
   }
 
   UpdateNunChuck();

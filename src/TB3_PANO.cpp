@@ -38,7 +38,7 @@ int TopThird7by5[36][2] = {{0, 0}, {0, -1}, {0, -2}, {-1, -2}, {-1, -1}, {-1, 0}
 
 void Set_angle_of_view()
 {
-  if (first_time == 1)
+  if (first_time)
   {
 
     AUX_ON = false; // turn of Auz since only PT
@@ -53,7 +53,7 @@ void Set_angle_of_view()
     lcd.at(1, 11, steps_to_deg_decimal(0));
     draw(78, 2, 1); // lcd.at(2,1,"Tilt AOV: ");
     lcd.at(2, 11, steps_to_deg_decimal(0));
-    first_time = 0;
+    first_time = false;
     // delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
 
@@ -75,7 +75,7 @@ void Set_angle_of_view()
 
 void Define_Overlap_Percentage()
 {
-  if (first_time == 1)
+  if (first_time)
   {
 
     lcd.empty();
@@ -83,7 +83,7 @@ void Define_Overlap_Percentage()
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
     // olpercentage=20;
     Display_olpercentage();
-    first_time = 0;
+    first_time = false;
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
                            // motor_steps_pt[2][0];
@@ -154,18 +154,13 @@ void button_actions_olpercentage()
 
 void Set_PanoArrayType()
 {
-  int yUpDown = 0;
-
   /*
   3x3,
   7x3, 5x5 top third, 7x5 top third
   int PanoArrayTypes=1; // 1 is 9 shot center, 2 is 25 shot center, 3 is SevenbyThree, 4 is NineByFive1, 5 is NineByFive2
-
-
-
   */
 
-  if (first_time == 1)
+  if (first_time)
   {
     // prompt_val=POWERSAVE_PT;
     lcd.empty();
@@ -185,8 +180,8 @@ void Set_PanoArrayType()
     else if (PanoArrayType == PANO_7X5TopThird)
       lcd.at(2, 4, "7x5 Top1/3");
 
-    first_time = 0;
-    delay(500);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // delay(prompt_time);
   }
@@ -245,7 +240,7 @@ void Set_PanoArrayType()
     // POWERSAVE_PT=prompt_val;
     // eeprom_write(98, POWERSAVE_PT);
     // progtype=0;
-    // delay(500);
+    // delay(prompt_time);
     progstep_forward();
   }
 
@@ -288,17 +283,16 @@ String steps_to_deg_decimal(unsigned long steps)
 void Pano_Review_Confirm()
 {
 
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     draw(41, 1, 4); // lcd.at(1,4,"Review and");
     draw(42, 2, 2); // lcd.at(2,2,"Confirm Setting");
     // delay(prompt_time);
-    delay(500);
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    delay(100);
     lcd.empty();
-    first_time = 0;
+    first_time = false;
     diplay_last_tm = millis();
     Pano_DisplayReviewProg();
     reviewprog = 1;
@@ -347,7 +341,7 @@ void pano_button_actions_review()
     disable_AUX(); //
 
     draw(49, 1, 1); // lcd.at(1,1,"Program Running");
-    delay(prompt_time / 3);
+    delay(prompt_time);
 
     // static_tm = 1; //use a tenth of a second
     intval = static_tm + 3;        // calc interval based on static time only
@@ -363,9 +357,9 @@ void pano_button_actions_review()
     Program_Engaged = true;        // leave this for pano
     Interrupt_Fire_Engaged = true; // just to start off first shot immediately
 
-    first_time = 1;
+    first_time = true;
     lcd.bright(20);
-    if (P2PType == 1)
+    if (P2PType)
     {
       interrupts();
       DFSetup(); // setup the ISR
@@ -712,7 +706,7 @@ void button_actions290()
       progstep = 206; //  move to the main program at the interval setting - UD050715
     else if (progtype == PORTRAITPANO)
       progstep = 216; //  move to the main program at the interval setting UD050715
-    first_time = 1;
+    first_time = true;
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // lcd.bright(0); //run in dimmed mode

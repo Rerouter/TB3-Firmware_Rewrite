@@ -10,4 +10,4 @@ void goto_position(int gotoshot_temp);
 #endif
 
 extern const bool DEBUG_GOTO;
-extern int inprogtype;
+extern int8_t inprogtype;

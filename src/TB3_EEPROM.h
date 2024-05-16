@@ -29,7 +29,7 @@ void review_RAM_Contents();
 
 
 extern int sequence_repeat_type;
-extern unsigned int first_time;
+extern boolean first_time;
 extern unsigned int intval;
 extern unsigned long interval;
 extern unsigned int camera_fired;
@@ -46,16 +46,16 @@ extern unsigned int keyframe[2][6];
 extern float linear_steps_per_shot[3];
 extern float ramp_params_steps[3];
 
-extern unsigned int POWERSAVE_PT;
-extern unsigned int POWERSAVE_AUX;
-extern byte PAUSE_ENABLED;
-extern unsigned int LCD_BRIGHTNESS_DURING_RUN;
+extern uint8_t POWERSAVE_PT;
+extern uint8_t POWERSAVE_AUX;
+extern boolean PAUSE_ENABLED;
+extern uint8_t LCD_BRIGHTNESS_DURING_RUN;
 extern uint16_t AUX_MAX_JOG_STEPS_PER_SEC;
-extern byte AUX_ON;
-extern byte AUX_REV;
+extern boolean AUX_ON;
+extern boolean AUX_REV;
 extern unsigned int build_version;
 
 extern unsigned int progstep;
-extern unsigned int progtype;
+extern int8_t progtype;
 extern boolean Program_Engaged;
 extern FloatPoint current_steps;

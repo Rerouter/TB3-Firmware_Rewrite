@@ -56,7 +56,7 @@ void set_defaults_in_ram()
   // EEPROM Variables
 
   // build_version=10930;//			Serial.println(build_version);
-  first_time = 1; //			Serial.println(first_time);
+  first_time = true; //			Serial.println(first_time);
   // progtype=0;//			Serial.println(progtype);
   intval = 20;                    //			Serial.println(intval);
   interval = 2000;                //			Serial.println(interval);
@@ -103,11 +103,11 @@ void set_defaults_in_setup()
 
   POWERSAVE_PT = 3;                  //			Serial.println(POWERSAVE_PT);
   POWERSAVE_AUX = 3;                 //			Serial.println(POWERSAVE_AUX);
-  AUX_ON = 1;                        //			        Serial.println(AUX_ON);
-  PAUSE_ENABLED = 0;                 //			Serial.println(PAUSE_ENABLED);   We set this to be on for beta testing only
+  AUX_ON = true;                        //			        Serial.println(AUX_ON);
+  PAUSE_ENABLED = false;                 //			Serial.println(PAUSE_ENABLED);   We set this to be on for beta testing only
   LCD_BRIGHTNESS_DURING_RUN = 3;     //		Serial.println(LCD_BRIGHTNESS_DURING_RUN);
   AUX_MAX_JOG_STEPS_PER_SEC = 15000; //	Serial.println(AUX_MAX_JOG_STEPS_PER_SEC);
-  AUX_REV = 0;                       //			        Serial.println(AUX_REV);
+  AUX_REV = false;                       //			        Serial.println(AUX_REV);
 
   eeprom_write(1, build_version);
   eeprom_write(96, POWERSAVE_PT);

@@ -24,15 +24,15 @@ void button_actions290();
 #endif
 
 
-extern unsigned int first_time;
-extern byte AUX_ON;
+extern boolean first_time;
+extern boolean AUX_ON;
 extern NHDLCD9 lcd;
 extern unsigned int prompt_time;
 extern volatile boolean nextMoveLoaded;
 extern unsigned int joy_y_lock_count;
 extern int prompt_delay;
-extern int c_button;
-extern int z_button;
+extern boolean c_button;
+extern boolean z_button;
 extern const bool DEBUG_PANO;
 extern long NClastread;
 extern unsigned int camera_total_shots;
@@ -48,13 +48,13 @@ extern unsigned int camera_fired;
 extern boolean Program_Engaged;
 extern boolean Interrupt_Fire_Engaged;
 extern unsigned int start_delay_sec;
-extern unsigned int P2PType;
+extern const boolean P2PType;
 extern boolean Move_Engaged;
 extern float motor_steps_pt[3][3];
 extern FloatPoint current_steps;
-extern unsigned int POWERSAVE_PT;
-extern unsigned int POWERSAVE_AUX;
-extern unsigned int progtype;
+extern uint8_t POWERSAVE_PT;
+extern uint8_t POWERSAVE_AUX;
+extern int8_t progtype;
 
 extern const uint16_t PAN_MAX_JOG_STEPS_PER_SEC;
 extern const uint16_t TILT_MAX_JOG_STEPS_PER_SEC;

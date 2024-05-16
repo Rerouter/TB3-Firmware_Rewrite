@@ -3,7 +3,7 @@
 int Z_Button_Read_Count = 0;
 int C_Button_Read_Count = 0;
 unsigned int goto_shot = 0;
-unsigned long input_last_tm = 0;
+uint32_t input_last_tm = 0;
 
 // In Program Menu Ordering
 const uint8_t INPROG_OPTIONS = 5; // up this when code for gotoframe
@@ -17,7 +17,6 @@ const uint8_t INPROG_STOPMOTION = 99; // Manual Forward and Back
 
 void Check_Prog() // this is a routine for the button presses in the program
 {
-
   switch (c_button) // looking for c button press
   {
   case 1:                  //  //c on
@@ -102,48 +101,43 @@ void SMS_Resume() // this runs once and is quick - not persistent
 
 void InProg_Select_Option()
 {
-  int yUpDown = 0;
   // int xLeftRight=0;
 
-  if (first_time == 1)
+  if (first_time)
   {
-
     lcd.empty();
-    // Serial.print("Shot in InProg_Select_OptionB2:");Serial.print(camera_fired);Serial.println(";");
-    if (inprogtype == INPROG_RESUME)
-    {
-      draw(86, 1, 6); // lcd.at(1,6,"Resume");
-    }
-    else if (inprogtype == INPROG_RTS)
-    {
-      draw(87, 1, 6); // lcd.at(1,6,"Restart");
-    }
-    else if (inprogtype == INPROG_GOTO_END)
-    {
-      draw(89, 1, 5); // lcd.at(1,5,"Go to End");
-    }
-    else if (inprogtype == INPROG_GOTO_FRAME)
-    {
-      draw(88, 1, 1); // lcd.at(1,1,"GoTo Frame:");
-      goto_shot = camera_fired;
-      DisplayGoToShot();
-    }
-    else if (inprogtype == INPROG_INTERVAL)
-    {
-      // draw(18,1,1);//lcd.at(1,1,"Intval:   .  sec"); //having issue with this command and some overflow issue??
-      intval = interval / 100;
-      lcd.at(1, 1, "Intval:   .  sec");
-      DisplayInterval();
-    }
 
-    else if (inprogtype == INPROG_STOPMOTION) // placeholder
-    {
-      // Hold Right, then C to advance a frame with static time, left C goes back
-      lcd.at(1, 1, "StopMo R+C / L+C");
+    // Assuming inprogtype is an integer or enum type
+    switch (inprogtype) {
+        case INPROG_RESUME: // 0
+            draw(86, 1, 6);  // lcd.at(1,6,"Resume");
+            break;
+        case INPROG_RTS: // 1
+            draw(87, 1, 6);  // lcd.at(1,6,"Restart");
+            break;
+        case INPROG_GOTO_END: // 2
+            draw(89, 1, 5);  // lcd.at(1,5,"Go to End");
+            break;
+        case INPROG_GOTO_FRAME: // 3
+            draw(88, 1, 1);  // lcd.at(1,1,"GoTo Frame:");
+            goto_shot = camera_fired;
+            DisplayGoToShot();
+            break;
+        case INPROG_INTERVAL: // 4
+            // If there are issues with draw command, it may be safer to use lcd.at directly as done below
+            intval = interval / 100;
+            lcd.at(1, 1, "Intval:   .  sec");
+            DisplayInterval();
+            break;
+        case INPROG_STOPMOTION: // 99?
+            lcd.at(1, 1, "StopMo R+C / L+C");
+            break;
+        default:
+            lcd.at(1, 1, "Undefined Option");
+            break;
     }
-
     lcd.at(2, 1, "UpDown  C-Select");
-    first_time = 0;
+    first_time = false;
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     if (POWERSAVE_PT > 2)
       disable_PT();
@@ -162,14 +156,10 @@ void InProg_Select_Option()
 
   if (inprogtype == INPROG_GOTO_FRAME)
   { // read leftright values for the goto frames
-    unsigned int goto_shot_last = goto_shot;
-    
-    goto_shot = updateProgType(goto_shot, joy_capture_x3(), 1, camera_total_shots, 1);
 
-    if (goto_shot_last != goto_shot)
-    {
-      DisplayGoToShot();
-    }
+    unsigned int goto_shot_last = goto_shot;
+    goto_shot = updateProgType(goto_shot, joy_capture_x3(), 1, camera_total_shots, 1);
+    if (goto_shot_last != goto_shot) { DisplayGoToShot(); }
   }
 
   if (inprogtype == INPROG_INTERVAL)
@@ -258,7 +248,7 @@ void button_actions_InProg_Select_Option()
 
     else if (inprogtype == INPROG_GOTO_FRAME)
     { // Go to specific frame
-      first_time = 1;
+      first_time = true;
       lcd.at(1, 4, "Going to");
       lcd.at(2, 4, "Frame:");
       lcd.at(2, 11, goto_shot);
@@ -268,7 +258,7 @@ void button_actions_InProg_Select_Option()
 
     else if (inprogtype == INPROG_INTERVAL)
     { // Change Interval and static time
-      first_time = 1;
+      first_time = true;
       // look at current gap between interval and static time = available move time.
       unsigned int available_move_time = interval / 100 - static_tm; // this is the gap we keep interval isn't live
       // Serial.print("AMT:");Serial.println(available_move_time);

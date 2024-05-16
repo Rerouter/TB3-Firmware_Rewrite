@@ -2,343 +2,315 @@
 
 void Setup_AUX_ON()
 {
-  int yUpDown = 0;
-
-  // int displayvar=0;
-
-  if (first_time == 1)
+  if (first_time)
   {
-    // prompt_val=AUX_ON;
     lcd.empty();
     draw(74, 1, 1); // lcd.at(1,1,"Aux Motor:");
-    if (AUX_ON == 0)
-      lcd.at(1, 12, "OFF");
-    if (AUX_ON == 1)
+    if (AUX_ON)
       lcd.at(1, 12, "ON");
+    else
+      lcd.at(1, 12, "OFF");
+
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
-    first_time = 0;
-    delay(350);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
     UpdateNunChuck();
-  }
 
-  AUX_ON = updateProgType(AUX_ON, joy_capture_y1(), 0, 1, 1);
+    auto lastAUX_ON = AUX_ON;
+    AUX_ON = updateProgType(AUX_ON, joy_capture_y1(), 0, 1, 1);
+    if (lastAUX_ON != AUX_ON) {first_time = true;}
 
-  if (c_button || z_button)
-  {
-
-    eeprom_write(100, AUX_ON);
-    // delay(350);
-    // progstep_forward();
-
-    if (c_button)
-      progstep_forward();
-    else
+    if (c_button || z_button)
     {
-      progtype = SETUPMENU;
-      progstep_goto(0);
-    }
+      eeprom_write(100, AUX_ON);
 
-    delay(350);
-    UpdateNunChuck();
+      if (c_button)
+        progstep_forward();
+      else
+      {
+        progtype = SETUPMENU;
+        progstep_goto(0);
+      }
+
+      delay(prompt_time); // Exit Delay
+      UpdateNunChuck(); // Clear the last button action
+    }
   }
 }
 
 void Setup_PAUSE_ENABLED()
 {
-  int yUpDown = 0;
-
-  // int displayvar=0;
-
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     draw(62, 1, 1); // lcd.at(1,1,"Pause ")
-    if (PAUSE_ENABLED == 0)
-    {
-      draw(68, 1, 8); // lcd.at(1,7,"Disabled")
-    }
-    if (PAUSE_ENABLED == 1)
+    if (PAUSE_ENABLED)
     {
       draw(67, 1, 8); // lcd.at(1,7,"Enabled")
     }
+    else
+    {
+      draw(68, 1, 8); // lcd.at(1,7,"Disabled")
+    }
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
-    first_time = 0;
-    delay(350);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
-
     UpdateNunChuck();
-  }
 
-  PAUSE_ENABLED = updateProgType(PAUSE_ENABLED, joy_capture_y1(), 0, 1, 1);
+    auto lastPAUSE_ENABLED = PAUSE_ENABLED;
+    PAUSE_ENABLED = updateProgType(PAUSE_ENABLED, joy_capture_y1(), 0, 1, 1);
+    if (lastPAUSE_ENABLED != PAUSE_ENABLED) {first_time = true;}
   
-  if (c_button || z_button)
-  {
-
-    eeprom_write(101, PAUSE_ENABLED);
-    // progtype=0;
-    if (c_button)
-      progstep_forward();
-    else
-      progstep_backward();
-    delay(350);
-    UpdateNunChuck();
+    if (c_button || z_button)
+    {
+      eeprom_write(101, PAUSE_ENABLED);
+      // progtype=0;
+      if (c_button)
+        progstep_forward();
+      else
+        progstep_backward();
+      delay(prompt_time);
+      UpdateNunChuck();
+    }
   }
 }
 
 void Setup_POWERSAVE_PT()
 {
-  int yUpDown = 0;
-
-  // int displayvar=0;
-
-  if (first_time == 1)
+  if (first_time)
   {
-    // prompt_val=POWERSAVE_PT;
     lcd.empty();
     lcd.at(1, 1, "PT Motors on");
-    if (POWERSAVE_PT == 1)
-      draw(70, 2, 1); // lcd.at(2,1,"Always");
-    if (POWERSAVE_PT == 2)
-      draw(71, 2, 1); // lcd.at(2,1,"Program");
-    if (POWERSAVE_PT == 3)
-      draw(72, 2, 1); // lcd.at(2,1,"Shoot (accuracy)");
-    if (POWERSAVE_PT == 4)
-      draw(73, 2, 1); // lcd.at(2,1,"Shoot (pwr save)");
+    switch(POWERSAVE_PT) {
+      case 1:
+        draw(70, 2, 1); // lcd.at(2,1,"Always");
+        break;
+      case 2:
+        draw(71, 2, 1); // lcd.at(2,1,"Program");
+        break;
+      case 3:
+        draw(72, 2, 1); // lcd.at(2,1,"Shoot (accuracy)");
+        break;
+      case 4:
+        draw(73, 2, 1); // lcd.at(2,1,"Shoot (pwr save)");
+        break;
+    }      
+      
     // lcd.at(2,12,"C-Set");
-    first_time = 0;
-    delay(350);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
-  }
 
-  POWERSAVE_PT = updateProgType(POWERSAVE_PT, joy_capture_y1(), 1, 4, 1);
+    auto lastPOWERSAVE_PT = POWERSAVE_PT;
+    POWERSAVE_PT = updateProgType(POWERSAVE_PT, joy_capture_y1(), 1, 4, 1);
+    if (lastPOWERSAVE_PT != POWERSAVE_PT) {first_time = true;}
 
-  if (c_button || z_button)
-  {
-
-    // POWERSAVE_PT=prompt_val;
-    eeprom_write(96, POWERSAVE_PT);
-    progtype = 0;
-    // delay(350);
-    if (c_button)
-      progstep_forward();
-    else
-      progstep_backward();
-    delay(350);
-    UpdateNunChuck();
-  }
+    if (c_button || z_button)
+    {
+      eeprom_write(96, POWERSAVE_PT);
+      progtype = 0;
+      if (c_button)
+        progstep_forward();
+      else
+        progstep_backward();
+      delay(prompt_time);
+      UpdateNunChuck();
+    }
+  }  
 }
 
 void Setup_POWERSAVE_AUX()
 {
-  int yUpDown = 0;
-
-  // int displayvar=0;
-
-  if (first_time == 1)
+  if (first_time)
   {
-    // prompt_val=POWERSAVE_AUX;
     lcd.empty();
     lcd.at(1, 1, "AUX Motors On:");
-    if (POWERSAVE_AUX == 1)
+
+    switch (POWERSAVE_AUX)
+    {
+    case 1:
       draw(70, 2, 1); // lcd.at(2,1,"Always");
-    if (POWERSAVE_AUX == 2)
+      break;
+    case 2:
       draw(71, 2, 1); // lcd.at(2,1,"Program");
-    if (POWERSAVE_AUX == 3)
+      break;
+    case 3:
       draw(72, 2, 1); // lcd.at(2,1,"Shoot (accuracy)");
-    if (POWERSAVE_AUX == 4)
+      break;
+    case 4:
       draw(73, 2, 1); // lcd.at(2,1,"Shoot (pwr save)");
+      break;
+    }
+
     // lcd.at(2,12,"C-Set");
-    first_time = 0;
-    delay(350);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
-  }
 
-  POWERSAVE_AUX = updateProgType(POWERSAVE_AUX, joy_capture_y1(), 1, 4, 1);
+    auto lastPOWERSAVE_AUX = POWERSAVE_AUX;
+    POWERSAVE_AUX = updateProgType(POWERSAVE_AUX, joy_capture_y1(), 1, 4, 1);
+    if (lastPOWERSAVE_AUX != POWERSAVE_AUX) {first_time = true;}
 
-  if (c_button || z_button)
-  {
-
-    // POWERSAVE_AUX=prompt_val;
-    eeprom_write(98, POWERSAVE_AUX);
-    progtype = 0;
-    // lcd.empty();
-    if (c_button)
-      progstep_forward();
-    else
-      progstep_backward();
-    delay(350);
-    UpdateNunChuck();
+    if (c_button || z_button)
+    {
+      eeprom_write(98, POWERSAVE_AUX);
+      progtype = 0;
+      // lcd.empty();
+      if (c_button)
+        progstep_forward();
+      else
+        progstep_backward();
+      delay(prompt_time);
+      UpdateNunChuck();
+    }
   }
 }
 
 void Setup_LCD_BRIGHTNESS_DURING_RUN()
 { // issue with this loop jumping out on first touch of up down - reads ghose C press.
-  int yUpDown = 0;
-
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     lcd.at(1, 1, "BkLite On Run: ");
     lcd.at(1, 15, LCD_BRIGHTNESS_DURING_RUN);
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
-    first_time = 0;
-    delay(250);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
-  }
 
-  LCD_BRIGHTNESS_DURING_RUN = updateProgType(LCD_BRIGHTNESS_DURING_RUN, joy_capture_y1(), 1, 8, 1);
+    auto lastLCD_BRIGHTNESS_DURING_RUN = LCD_BRIGHTNESS_DURING_RUN;
+    LCD_BRIGHTNESS_DURING_RUN = updateProgType(LCD_BRIGHTNESS_DURING_RUN, joy_capture_y1(), 1, 8, 1);
+    if (lastLCD_BRIGHTNESS_DURING_RUN != LCD_BRIGHTNESS_DURING_RUN) {first_time = true;}
 
-  if (c_button || z_button)
-  {
-
-    // LCD Values
-    eeprom_write(102, LCD_BRIGHTNESS_DURING_RUN);
-    progtype = 0;
-    // lcd.empty();
-    // lcd.at(1,1,"Return Main Menu");
-    lcd.bright(4);
-    // delay(100);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    if (c_button)
-      progstep_forward();
-    else
-      progstep_backward();
-    delay(350);
-    UpdateNunChuck();
+    if (c_button || z_button)
+    {
+      eeprom_write(102, LCD_BRIGHTNESS_DURING_RUN);
+      progtype = 0;
+      // lcd.empty();
+      // lcd.at(1,1,"Return Main Menu");
+      lcd.bright(4);
+      if (c_button)
+        progstep_forward();
+      else
+        progstep_backward();
+      delay(prompt_time);
+      UpdateNunChuck();
+    }
   }
 }
 
 void Setup_Max_AUX_Motor_Speed()
 { // issue with this loop jumping out on first touch of up down - reads ghose C press.
-  int yUpDown = 0;
 
-  if (first_time == 1)
+  if (first_time)
   {
     lcd.empty();
     lcd.at(1, 1, "Max Speed:  ");
     lcd.at(1, 12, AUX_MAX_JOG_STEPS_PER_SEC);
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
-    first_time = 0;
-    delay(250);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
-  }
 
-  AUX_MAX_JOG_STEPS_PER_SEC = updateProgType(AUX_MAX_JOG_STEPS_PER_SEC, joy_capture_y1(), 2000, 20000, 500);
+    auto lastAUX_MAX_JOG_STEPS_PER_SEC = AUX_MAX_JOG_STEPS_PER_SEC;
+    AUX_MAX_JOG_STEPS_PER_SEC = updateProgType(AUX_MAX_JOG_STEPS_PER_SEC, joy_capture_y1(), 2000, 20000, 500);
+    if (lastAUX_MAX_JOG_STEPS_PER_SEC != AUX_MAX_JOG_STEPS_PER_SEC) {first_time = true;}
 
-  if (c_button || z_button)
-  {
-
-    // POWERSAVE_AUX=prompt_val;
-    eeprom_write(104, AUX_MAX_JOG_STEPS_PER_SEC);
-    if (c_button)
-      progstep_forward();
-    else
-      progstep_backward();
-    delay(350);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last button
+    if (c_button || z_button)
+    {
+      eeprom_write(104, AUX_MAX_JOG_STEPS_PER_SEC);
+      if (c_button)
+        progstep_forward();
+      else
+        progstep_backward();
+      delay(prompt_time);
+      UpdateNunChuck(); //  Use this to clear out any button registry from the last button
+    }
   }
 }
 
 void Setup_AUX_Motor_DIR()
 {
-  int yUpDown = 0;
-
-  // int displayvar=0;
-
-  if (first_time == 1)
+  if (first_time)
   {
-    // prompt_val=AUX_ON;
     lcd.empty();
     lcd.at(1, 1, "Aux Reversed:");
-    if (AUX_REV == 0)
-      lcd.at(1, 14, "OFF");
-    if (AUX_REV == 1)
+    if (AUX_REV)
       lcd.at(1, 14, "ON");
+    else
+      lcd.at(1, 14, "OFF");
+      
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
-    first_time = 0;
-    delay(350);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
     UpdateNunChuck();
-  }
 
-  AUX_REV = updateProgType(AUX_REV, joy_capture_y1(), 0, 1, 1);
+    auto lastAUX_REV = AUX_REV;
+    AUX_REV = updateProgType(AUX_REV, joy_capture_y1(), 0, 1, 1);
+    if (lastAUX_REV != AUX_REV) {first_time = true;}
 
-  if (c_button || z_button)
-  {
-
-    eeprom_write(106, AUX_REV);
-    progtype = 0;
-    lcd.empty();
-    lcd.at(1, 1, "Return Main Menu");
-    delay(1500);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last button
-                           // progstep_forward();
-    // progstep_goto(0);
-    if (c_button)
-      progstep_goto(0);
-    else
-      progstep_backward();
+    if (c_button || z_button)
+    {
+      eeprom_write(106, AUX_REV);
+      progtype = 0;
+      lcd.empty();
+      lcd.at(1, 1, "Return Main Menu");
+      if (c_button)
+        progstep_goto(0);
+      else
+        progstep_backward();
+      delay(prompt_time);
+      UpdateNunChuck(); //  Use this to clear out any button registry from the last button
+                            // progstep_forward();
+    }
   }
 }
 
 void Set_Shot_Repeat()
-{ //
-
-  int yUpDown = 0;
-
-  if (first_time == 1)
+{
+  if (first_time)
   {
     // int sequence_repeat_type=1; //1 Defaults - Run Once, 0 Continuous Loop,  -1 Repeat Forward
     lcd.empty();
@@ -350,40 +322,35 @@ void Set_Shot_Repeat()
     if (sequence_repeat_type == -1)
       lcd.at(2, 1, "Repeat Forward"); // not currently supported
     // lcd.at(2,12,"C-Set");
-    first_time = 0;
-    delay(350);
+    first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-                           // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
     UpdateNunChuck();
-  }
+    
+    auto lastsequence_repeat_type = sequence_repeat_type;
+    sequence_repeat_type = updateProgType(sequence_repeat_type, joy_capture_y1(), 0, 1, 1);
+    if (lastsequence_repeat_type != sequence_repeat_type) {first_time = true;}
 
-  sequence_repeat_type = updateProgType(sequence_repeat_type, joy_capture_y1(), 0, 1, 1);
-
-  if (c_button)
-  {
-
-    // POWERSAVE_AUX=prompt_val;
-    // eeprom_write(98, POWERSAVE_AUX);
-    // progtype=0;
-    // lcd.empty();
-    progstep_forward();
-    delay(350);
-    UpdateNunChuck();
-  }
-  else if (z_button)
-  {
-
-    // POWERSAVE_AUX=prompt_val;
-    // eeprom_write(98, POWERSAVE_AUX);
-    // progtype=0;
-    // lcd.empty();
-    progstep_backward();
-    delay(350);
+    if (c_button)
+    {
+      // eeprom_write(98, POWERSAVE_AUX);
+      // progtype=0;
+      // lcd.empty();
+      progstep_forward();
+    }
+    else if (z_button)
+    {
+      // eeprom_write(98, POWERSAVE_AUX);
+      // progtype=0;
+      // lcd.empty();
+      progstep_backward();
+    }
+    delay(prompt_time);
     UpdateNunChuck();
   }
 }

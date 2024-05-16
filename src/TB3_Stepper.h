@@ -20,7 +20,7 @@ void enable_AUX();
 
 #endif
 
-extern byte AUX_ON;
+extern boolean AUX_ON;
 extern FloatPoint delta_steps;
 extern FloatPoint current_steps;
 extern FloatPoint target_steps;

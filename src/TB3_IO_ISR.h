@@ -16,7 +16,7 @@ void Jogloop();
 
 extern volatile boolean changehappened;
 extern volatile boolean nextMoveLoaded;
-extern volatile int state;
+extern volatile boolean state;
 extern const bool DEBUG;
 extern const uint8_t TIME_CHUNK;
 extern void updateMotorVelocities2();

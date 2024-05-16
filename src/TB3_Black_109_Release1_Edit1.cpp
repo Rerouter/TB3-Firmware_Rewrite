@@ -96,7 +96,7 @@ unsigned int lead_out = 1;
 unsigned int start_delay_sec = 0;
 
 // External Interrupt Variables
-volatile int state = 0;                  // new variable for interrupt
+volatile boolean state = 0;                  // new variable for interrupt
 volatile boolean changehappened = false; // new variable for interrupt
 long shuttertimer_open = 0;
 long shuttertimer_close = 0;
@@ -105,8 +105,8 @@ int ext_shutter_count = 0;
 int ext_hdr_shots = 1; // this is how many shots are needed before moving - leave at one for normal shooting - future functionality with external
 
 // Start of variables for Pano Mode
-unsigned int P2PType = 1; // 0 = no accel, 1= accel
-unsigned int PanoPostMoveDelay = 200;
+const boolean P2PType = true; // 0 = no accel, 1= accel
+const uint16_t PanoPostMoveDelay = 200;
 
 // 3 Point motor routine values
 float motor_steps_pt[MAX_MOVE_POINTS][MOTORS];                          // 3 total points.   Start point is always 0.0
@@ -136,25 +136,24 @@ We can power up and power down the Pan Tilt motors together.  We can power up an
 */
 
 // CVariables that are set during the Setup Menu store these in EEPROM
-unsigned int POWERSAVE_PT;  // 1=None - always on  2 - low   3=standard    4=High
-unsigned int POWERSAVE_AUX; // 1=None - always on  2 - low   3=standard    4=High
-byte AUX_ON;                // 1=Aux Enabled, 2=Aux disabled
-byte PAUSE_ENABLED;         // 1=Pause Enabled, 0=Pause disabled
+uint8_t POWERSAVE_PT;  // 1=None - always on  2 - low   3=standard    4=High
+uint8_t POWERSAVE_AUX; // 1=None - always on  2 - low   3=standard    4=High
+boolean AUX_ON;                // 1=Aux Enabled, 0=Aux disabled
+boolean PAUSE_ENABLED;         // 1=Pause Enabled, 0=Pause disabled
 boolean REVERSE_PROG_ORDER; // Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
 boolean MOVE_REVERSED_FOR_RUN = 0;
-unsigned int LCD_BRIGHTNESS_DURING_RUN; // 0 is off 8 is max
+uint8_t LCD_BRIGHTNESS_DURING_RUN; // 0 is off 8 is max
 uint16_t AUX_MAX_JOG_STEPS_PER_SEC; // value x 1000  20 is the top or 20000 steps per second.
-byte AUX_REV;                           // 1=Aux Enabled, 2=Aux disabled
+boolean AUX_REV;                           // 1=Aux Enabled, 0=Aux disabled
 
 // control variable, no need to store in EEPROM - default and setup during shot
 unsigned int progstep = 0;           // used to define case for main loop
 boolean progstep_forward_dir = true; // boolean to define direction of menu travel to allow for easy skipping of menus
-unsigned int progtype = 0;           // updownmenu selection
-int inprogtype = 0;                  // updownmenu selection during shoot
+int8_t progtype = 0;           // updownmenu selection
+int8_t inprogtype = 0;                  // updownmenu selection during shoot
 
-unsigned int first_time = 1;         // variable to help with LCD dispay variable that need to show one time
+boolean first_time = true;         // variable to help with LCD dispay variable that need to show one time
 
-unsigned int max_prefire;
 unsigned int program_progress_2PT = 1; // Lead in, ramp, linear, etc for motor routine case statement
 unsigned int program_progress_3PT = 1; // phase 1, phase 2
 unsigned long interval_tm = 0;         // mc time to help with interval comparison
@@ -174,15 +173,14 @@ int sequence_repeat_type = 1;  // 1 Defaults - Run Once, 0 Continuous Loop,  -1 
 // remote and interface variables
 
 float joy_x_axis;
-
 float joy_y_axis;
 float accel_x_axis;
 
 int PanStepCount;
 int TiltStepCount;
 
-int z_button = 0;
-int c_button = 0;
+boolean z_button = false;
+boolean c_button = false;
 unsigned int joy_y_lock_count = 0;
 unsigned int joy_x_lock_count = 0;
 int prev_accel_x_reading = 0;
@@ -190,7 +188,6 @@ int CZ_Button_Read_Count = 0;
 boolean CZ_Released = true;
 boolean C_Released = true;
 boolean Z_Released = true;
-unsigned int NCReadMillis = 42; // frequency at which we read the nunchuck for moves  1000/24 = 42  1000/30 = 33
 long NClastread = 1000;         // control variable for NC reads cycles
 
 // Stepper Setup
@@ -367,7 +364,7 @@ void setup()
   lcd.cursorOff();
   lcd.bright(4);
 
-  delay(prompt_time * 2);
+  delay(prompt_time);
   lcd.empty();
   delay(100);
 
@@ -857,9 +854,9 @@ void loop()
           disable_PT(); //  low, standard, high, we power down at the end of program
         if (POWERSAVE_AUX > 1)
           disable_AUX(); // low, standard, high, we power down at the end of program
-        delay(prompt_time * 2);
+        delay(prompt_time);
         progstep = 90;
-        first_time = 1;
+        first_time = true;
       }
 
       // This portion always runs in empty space of loop.
@@ -946,7 +943,7 @@ void loop()
 
           if (!break_continuous)
             Auto_Repeat_Video(); // only run this if there isn't a break command
-          first_time = 1;
+          first_time = true;
         }
         else if (!motorMoving && (sequence_repeat_type == 1))
         { // new end condition for RUN ONCE
@@ -958,7 +955,7 @@ void loop()
           if (POWERSAVE_AUX > 1)
             disable_AUX(); // low, standard, high, we power down at the end of program
           progstep = 90;
-          first_time = 1;
+          first_time = true;
           delay(100);
           // UpdateNunChuck();
         }
@@ -1009,9 +1006,9 @@ void loop()
             disable_PT(); //  low, standard, high, we power down at the end of program
           if (POWERSAVE_AUX > 1)
             disable_AUX(); // low, standard, high, we power down at the end of program
-          delay(prompt_time * 2);
+          delay(prompt_time);
           progstep = 90;
-          first_time = 1;
+          first_time = true;
           // delay(100);
           // UpdateNunChuck();
         }
@@ -1131,9 +1128,9 @@ void loop()
           disable_PT(); //  low, standard, high, we power down at the end of program
         if (POWERSAVE_AUX > 1)
           disable_AUX(); // low, standard, high, we power down at the end of program
-        delay(prompt_time * 2);
+        delay(prompt_time);
         progstep = 90;
-        first_time = 1;
+        first_time = true;
       }
       UpdateNunChuck();
       Check_Prog(); // look for button presses
@@ -1144,13 +1141,13 @@ void loop()
       break; // break 52 - end external triggering loop
 
     case 90: // end of program - offer repeat and reverse options - check the nuncuck
-      if (first_time == 1)
+      if (first_time)
       {
         lcd.empty();
         lcd.at(1, 4, "Repeat - C");
         lcd.at(2, 4, "Reverse - Z");
         UpdateNunChuck();
-        first_time = 0;
+        first_time = false;
         delay(100);
       }
 
@@ -1239,13 +1236,13 @@ void loop()
         Serial.println(progtype);
         if (progtype == PANOGIGA) // regular pano
         {
-          if (P2PType == 0)
-          {
-            move_motors_pano_basic();
-          }
-          else if (P2PType == 1)
+          if (P2PType)
           {
             move_motors_pano_accel();
+          }
+          else
+          {
+            move_motors_pano_basic();
           }
         }
 
@@ -1290,7 +1287,7 @@ void loop()
       } // end test
 
       // just have this repeat like we are in loop
-      if (P2PType == 1) // acceleration profiles
+      if (P2PType) // acceleration profiles
       {
 
         if (!nextMoveLoaded)
@@ -1328,7 +1325,7 @@ void loop()
           disable_AUX(); // low, standard, high, we power down at the end of program
         delay(2000);
         progstep = 290;
-        first_time = 1;
+        first_time = true;
       }
       // updateMotorVelocities();  //uncomment this for DF Loop
       UpdateNunChuck();
@@ -1339,14 +1336,14 @@ void loop()
       break; // break 250
 
     case 290: //  finished up pano
-      if (first_time == 1)
+      if (first_time)
       {
         lcd.empty();
         stopISR1();
         draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
         draw(59, 2, 1); // lcd.at(2,1," Repeat Press C");
         UpdateNunChuck();
-        first_time = 0;
+        first_time = false;
         delay(100);
       }
       UpdateNunChuck();

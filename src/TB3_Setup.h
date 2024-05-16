@@ -17,8 +17,8 @@ void Set_Shot_Repeat();
 #endif
 
 extern long NClastread;
-extern int c_button;
-extern int z_button;
+extern boolean c_button;
+extern boolean z_button;
 extern const uint8_t SETUPMENU;
 extern NHDLCD9 lcd;
 

@@ -16,7 +16,7 @@ void DisplayGoToShot();
 
 extern int CZ_Button_Read_Count;
 extern boolean CZ_Released;
-extern int inprogtype;
+extern int8_t inprogtype;
 
 extern void goto_position(int gotoshot_temp);
 extern int updateProgType(int current, int direction, int minOption, int maxOptions, int stepSize);

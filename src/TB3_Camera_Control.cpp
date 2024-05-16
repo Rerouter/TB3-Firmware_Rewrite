@@ -1,15 +1,15 @@
 #include "TB3_Camera_Control.h"
 
 // Timer2flags
-unsigned long MsTimer2_msecs;
-volatile unsigned long MsTimer2_count;
+uint32_t MsTimer2_msecs;
+volatile uint32_t MsTimer2_count;
 volatile char MsTimer2_overflowing;
-volatile unsigned int MsTimer2_tcnt2;
+volatile uint16_t MsTimer2_tcnt2;
 
 const uint8_t CAMERA_PIN = 12; // drives tip of 2.5 mm connector
 const uint8_t FOCUS_PIN = 13;  // drives  middle of 2.5mm connector
-bool Shutter_Signal_Engaged = false;
-bool Focus_Signal_Engaged = false;
+boolean Shutter_Signal_Engaged = false;
+boolean Focus_Signal_Engaged = false;
 
 /*
 
