@@ -204,6 +204,18 @@ void WiiNunchuck3::printData()
 	i++;
 }
 
+void WiiNunchuck3::clear()
+{
+    // Explicitly set each byte to zero
+    nunchuck_buf[0] = 0;  // Joystick X-axis
+    nunchuck_buf[1] = 0;  // Joystick Y-axis
+    nunchuck_buf[2] = 0;  // Accelerometer X-axis (high bits)
+    nunchuck_buf[3] = 0;  // Accelerometer Y-axis (high bits)
+    nunchuck_buf[4] = 0;  // Accelerometer Z-axis (high bits)
+    nunchuck_buf[5] = 0xC0;  // No buttons pressed, accelerometer low bits are zero
+}
+
+
 bool WiiNunchuck3::zbutton()
 {
 	// returns zbutton state: 1=pressed, 0=not pressed
