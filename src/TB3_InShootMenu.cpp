@@ -152,34 +152,29 @@ void InProg_Select_Option()
     NClastread = millis();
     // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
-  }
 
-  if (inprogtype == INPROG_GOTO_FRAME)
-  { // read leftright values for the goto frames
+    if (inprogtype == INPROG_GOTO_FRAME)
+    { // read leftright values for the goto frames
 
-    unsigned int goto_shot_last = goto_shot;
-    goto_shot = updateProgType(goto_shot, joy_capture_x3(), 1, camera_total_shots, 1);
-    if (goto_shot_last != goto_shot) { DisplayGoToShot(); }
-  }
-
-  if (inprogtype == INPROG_INTERVAL)
-  { // read leftright values for the goto frames
-
-    unsigned int intval_last = intval;
-
-    intval = updateProgType(intval, joy_capture_x3(), 5, 6000, 1);
-
-    if (intval_last != intval)
-    {
-      DisplayInterval();
+      unsigned int goto_shot_last = goto_shot;
+      goto_shot = updateProgType(goto_shot, joy_capture_x3(), 1, camera_total_shots, 1);
+      if (goto_shot_last != goto_shot) { DisplayGoToShot(); }
     }
-  }
 
-  inprogtype = updateProgType(inprogtype, joy_capture_y1(), 0, INPROG_OPTIONS - 1, 1);
-  if (CZ_Released)
-    button_actions_InProg_Select_Option(); // don't react to buttons unless there has been a CZ release
-  delay(prompt_delay);
-  delay(1);
+    if (inprogtype == INPROG_INTERVAL)
+    { // read leftright values for the goto frames
+
+      unsigned int intval_last = intval;
+      intval = updateProgType(intval, joy_capture_x3(), 5, 6000, 1);
+      if (intval_last != intval) { DisplayInterval(); }
+    }
+
+    inprogtype = updateProgType(inprogtype, joy_capture_y1(), 0, INPROG_OPTIONS - 1, 1);
+    if (CZ_Released)
+      button_actions_InProg_Select_Option(); // don't react to buttons unless there has been a CZ release
+    delay(prompt_delay);
+    delay(1);
+    }
 }
 
 void button_actions_InProg_Select_Option()

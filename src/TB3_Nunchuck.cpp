@@ -34,26 +34,37 @@ void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes
   {
     Nunchuck.getData();
 
-    if (Nunchuck.joyx() == 0 && Nunchuck.joyy() == 0)
-    { // error condition //throw this out and read again
-      delay(1);
-      NCReadStatus++;
-      // Serial.println(micros());
+    // Store results in local variables to avoid multiple function calls
+    uint8_t joyX = static_cast<uint8_t>(Nunchuck.joyx());
+    uint8_t joyY = static_cast<uint8_t>(Nunchuck.joyy());
+    uint16_t accelX = static_cast<uint16_t>(Nunchuck.accelx());  // Assuming 10-bit data
+    uint16_t accelY = static_cast<uint16_t>(Nunchuck.accely());
+    uint16_t accelZ = static_cast<uint16_t>(Nunchuck.accelz());
+
+    if (joyX == 0 && joyY == 0)
+    {
+        // Error condition: throw this out and read again
+        delay(1);
+        NCReadStatus++;
     }
-    else if (Nunchuck.joyx() == 255 && Nunchuck.joyy() == 255 && Nunchuck.accelx() == 1023)
-    { // nunchuck disconnected, then reconnected  - needs initializing
-      Nunchuck.init(0);
-      NCReadStatus++;
-      // Serial.println(micros());
+    else if (joyX == 255 && joyY == 255 && (accelX == 1023 || accelX == 0))
+    {
+        // Nunchuck disconnected, then reconnected - needs initializing
+        Nunchuck.init(0);
+        NCReadStatus++;
     }
-    else if (Nunchuck.accelx() == 0 && Nunchuck.accely() == 0 && Nunchuck.accelz() == 0)
-    { // nunchuck just reintialized - needs a few more reads before good
-      delay(1);
-      NCReadStatus++;
-      // Serial.println(micros());
+    else if (accelX == 0 && accelY == 0 && accelZ == 0)
+    {
+        // Nunchuck just reinitialized - needs a few more reads before good
+        delay(1);
+        NCReadStatus++;
     }
     else
       NCReadStatus = 0;
+
+    if (NCReadStatus > 250) {
+      NCReadStatus = 250;
+    }
 
   } while (NCReadStatus > 0);
   if (DEBUG_NC) {

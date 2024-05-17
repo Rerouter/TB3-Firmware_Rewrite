@@ -88,17 +88,13 @@ void Define_Overlap_Percentage()
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
                            // motor_steps_pt[2][0];
   }
-
-  unsigned int olpercentage_last = olpercentage;
   UpdateNunChuck();
 
+  unsigned int olpercentage_last = olpercentage;
   olpercentage = updateProgType(olpercentage, joy_capture3(), 1, 99, 1);
-
-  if (olpercentage_last != olpercentage)
-  {
-    Display_olpercentage();
-  }
+  if (olpercentage_last != olpercentage) { Display_olpercentage(); }
   // delay(50);
+  
   button_actions_olpercentage(); // read buttons, look for c button press to set interval
   delay(prompt_delay);
 }

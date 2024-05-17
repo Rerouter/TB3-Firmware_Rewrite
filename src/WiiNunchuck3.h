@@ -31,6 +31,7 @@ class WiiNunchuck3 {
 		int getData(void);
 		void printData(void);
 		void init(int);
+		void clear(void);
 		bool zbutton(void);
 		bool cbutton(void);
 		int joyx(void);

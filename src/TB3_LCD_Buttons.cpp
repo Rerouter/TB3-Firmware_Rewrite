@@ -102,7 +102,8 @@ void Choose_Program()
 
     auto lastprogtype = progtype;
     progtype = updateProgType(progtype, joy_capture_y1(), 0, MENU_OPTIONS - 1, 1);
-    if (lastprogtype != progtype) {first_time = true;}
+    if (lastprogtype != progtype) { first_time = true; }
+
     button_actions_choose_program();
   }
 }
@@ -752,9 +753,7 @@ void Set_Duration() // This is really setting frames
   { // video
 
     unsigned int overaldur_last = overaldur;
-
     overaldur = updateProgType(overaldur, joy_capture3(), 1, 10000, 1);
-
     if (overaldur_last != overaldur)
     {
       calc_time_remain_dur_sec(overaldur);
@@ -765,7 +764,6 @@ void Set_Duration() // This is really setting frames
   { // sms
 
     unsigned int camera_moving_shots_last = camera_moving_shots;
-
     camera_moving_shots = updateProgType(camera_moving_shots, joy_capture3(), 10, 10000, 1);
 
     camera_total_shots = camera_moving_shots; // we add in lead in lead out later
@@ -863,13 +861,8 @@ void Set_Static_Time()
   UpdateNunChuck();
 
   unsigned int static_tm_last = static_tm;
-
   static_tm = updateProgType(static_tm, joy_capture3(), 1, max_shutter, 1);
-
-  if (static_tm_last != static_tm)
-  {
-    DisplayStatic_tm();
-  }
+  if (static_tm_last != static_tm) { DisplayStatic_tm(); }
 
   button_actions_stat_time(static_tm); // read buttons, look for c button press to set interval
   delay(prompt_delay);
@@ -964,14 +957,9 @@ void Set_Ramp()
   UpdateNunChuck();
 
   unsigned int rampval_last = rampval;
-
   rampval = updateProgType(rampval, joy_capture3(), 1, camera_moving_shots / 3, 1);
+  if (rampval_last != rampval) { DisplayRampval(); }
 
-  if (rampval_last != rampval)
-  {
-    DisplayRampval();
-  }
-  // delay(50);
   button_actions_rampval(); // read buttons, look for c button press to set interval
   delay(prompt_delay);
 }

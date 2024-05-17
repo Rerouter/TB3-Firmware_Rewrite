@@ -68,18 +68,22 @@ int WiiNunchuck3::getData()
 	// Receive data back from the nunchuck,
 	// returns 1 on successful read. returns 0 on failure
 	Wire.requestFrom(WII_NUNCHUCK_TWI_ADR, WII_TELEGRAM_LEN); // request data from nunchuck
+	uint8_t flag = 0;
 
 	for (cnt = 0; (cnt < WII_TELEGRAM_LEN) && Wire.available(); cnt++)
 	{
-		nunchuck_buf[cnt] = decode_byte(Wire.read()); // receive byte as an integer
+		auto temp = decode_byte(Wire.read()); // receive byte as an integer
+		if (nunchuck_buf[cnt] == temp || temp == 255) {flag++;}
+		nunchuck_buf[cnt] = temp; // receive byte as an integer
 	}
 
 	clearTwiInputBuffer();
-	if (cnt >= WII_TELEGRAM_LEN)
+	if (cnt >= WII_TELEGRAM_LEN && flag != cnt)
 	{
 		send_zero();
 		return 1; // success
 	}
+	clear();
 	return 0; // failure
 }
 
@@ -212,7 +216,7 @@ void WiiNunchuck3::clear()
     nunchuck_buf[2] = 0;  // Accelerometer X-axis (high bits)
     nunchuck_buf[3] = 0;  // Accelerometer Y-axis (high bits)
     nunchuck_buf[4] = 0;  // Accelerometer Z-axis (high bits)
-    nunchuck_buf[5] = 0xC0;  // No buttons pressed, accelerometer low bits are zero
+    nunchuck_buf[5] = 0;  // No buttons pressed, accelerometer low bits are zero
 }
 
 
