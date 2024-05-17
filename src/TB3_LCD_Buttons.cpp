@@ -93,6 +93,7 @@ void Choose_Program()
       disable_AUX();
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+    NClastread = millis();
   }
 
   if ((millis() - NClastread) > 50)
@@ -110,7 +111,7 @@ void Choose_Program()
 
 void button_actions_choose_program()
 {
-  if (c_button) {
+  if (c_button && !z_button) {
     lcd.empty();
     if (progtype == REG2POINTMOVE)
     { // new 2 point move
@@ -249,16 +250,11 @@ void Move_to_Startpoint()
 
 void button_actions_move_start()
 {
-  switch (c_button)
+  if (c_button && !z_button)
   {
-
-  case 1: // c on
-          // user_input();
-
     // this puts input to zero to allow a stop
     joy_x_axis = 0.0;
     joy_y_axis = 0.0;
-    ;
     accel_x_axis = 0.0;
 
     do // run this loop until the motors stop
@@ -289,19 +285,13 @@ void button_actions_move_start()
     lcd.empty();
 
     progstep_forward();
-    break;
+  }
 
-  case 0:
-    switch (z_button) // do nothing
-    {
-    case 1: // z button on -
-      progtype = 0;
-      progstep_goto(0);
-      delay(1);
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    progtype = 0;
+    progstep_goto(0);
+    delay(1);
   }
 }
 
@@ -331,11 +321,12 @@ void Move_to_Endpoint()
     joy_y_axis = 0;
     accel_x_axis = 0;
     startISR1();
+    enable_PT();
+    if (AUX_ON) {
+      enable_AUX(); //
+    }
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    enable_PT();
-    if (AUX_ON)
-      enable_AUX(); //
   }
   /*
           UpdateNunChuck();
@@ -356,97 +347,69 @@ void Move_to_Endpoint()
 
 void button_actions_move_end()
 {
-
-  switch (c_button)
+  if (c_button && !z_button)
   {
+    // begin to stop the motors
+    // this puts input to zero to allow a stop
+    joy_x_axis = 0;
+    joy_y_axis = 0;
+    accel_x_axis = 0;
 
-  case 1: // con
-    switch (z_button)
+    do // run this loop until the motors stop
     {
-    case 1: // con zon
-      break;
-
-    case 0: // con zoff
-            // user_input();
-
-      // begin to stop the motors
-      // this puts input to zero to allow a stop
-      joy_x_axis = 0.0;
-      joy_y_axis = 0.0;
-      ;
-      accel_x_axis = 0.0;
-
-      do // run this loop until the motors stop
+      // Serial.print("motorMoving:");Serial.println(motorMoving);
+      if (!nextMoveLoaded)
       {
-        // Serial.print("motorMoving:");Serial.println(motorMoving);
-        if (!nextMoveLoaded)
-        {
-          updateMotorVelocities2();
-        }
-      } while (motorMoving);
-
-      // end stop the motors
-
-      motors[0].position = long(current_steps.x);
-      motors[1].position = long(current_steps.y);
-      motors[2].position = long(current_steps.z);
-
-      if (DEBUG)
-        Serial.print("motors[0].position:");
-      Serial.println(motors[0].position);
-      if (DEBUG)
-        Serial.print("motors[1].position:");
-      Serial.println(motors[1].position);
-      if (DEBUG)
-        Serial.print("motors[2].position:");
-      Serial.println(motors[2].position);
-
-      motor_steps_pt[2][0] = current_steps.x; // now signed storage
-      motor_steps_pt[2][1] = current_steps.y;
-      motor_steps_pt[2][2] = current_steps.z;
-
-      if (DEBUG_MOTOR)
-      {
-        Serial.println("motor_steps_end");
-        Serial.print(motor_steps_pt[2][0]);
-        Serial.print(",");
-        Serial.print(motor_steps_pt[2][1]);
-        Serial.print(",");
-        Serial.print(motor_steps_pt[2][2]);
-        Serial.println();
+        updateMotorVelocities2();
       }
+    } while (motorMoving);
 
-      lcd.empty();
+    // end stop the motors
 
-      if (!REVERSE_PROG_ORDER)
-        draw(16, 1, 3); // lcd.at(1,3,"End Point Set");
-      if (REVERSE_PROG_ORDER)
-        draw(9, 1, 3); // lcd.at(1,3,"Start Pt. Set");
+    motors[0].position = long(current_steps.x);
+    motors[1].position = long(current_steps.y);
+    motors[2].position = long(current_steps.z);
 
-      delay(prompt_time);
-      progstep_forward();
-      break;
-    }
-  case 0: // coff
-    switch (z_button)
+    if (DEBUG)
+      Serial.print("motors[0].position:");
+    Serial.println(motors[0].position);
+    if (DEBUG)
+      Serial.print("motors[1].position:");
+    Serial.println(motors[1].position);
+    if (DEBUG)
+      Serial.print("motors[2].position:");
+    Serial.println(motors[2].position);
+
+    motor_steps_pt[2][0] = current_steps.x; // now signed storage
+    motor_steps_pt[2][1] = current_steps.y;
+    motor_steps_pt[2][2] = current_steps.z;
+
+    if (DEBUG_MOTOR)
     {
-    case 1: // coff zon
-      // add new double check routine for spurious reads of z
-      // user_input();
-      delay(1);
-      UpdateNunChuck();
-      if (z_button)
-      {
-        progstep_backward();
-      }
-      else
-        break;
-    case 0: // coff zoff
-      break;
+      Serial.println("motor_steps_end");
+      Serial.print(motor_steps_pt[2][0]);
+      Serial.print(",");
+      Serial.print(motor_steps_pt[2][1]);
+      Serial.print(",");
+      Serial.print(motor_steps_pt[2][2]);
+      Serial.println();
     }
-    break;
-  default:
-    break;
+
+    lcd.empty();
+
+    if (!REVERSE_PROG_ORDER)
+      draw(16, 1, 3); // lcd.at(1,3,"End Point Set");
+    if (REVERSE_PROG_ORDER)
+      draw(9, 1, 3); // lcd.at(1,3,"Start Pt. Set");
+
+    delay(prompt_time);
+    progstep_forward();
+  }
+
+  if (z_button and !c_button)
+  {
+    UpdateNunChuck();
+    progstep_backward();
   }
 }
 
@@ -516,7 +479,6 @@ void button_actions_move_x(int Point)
     // this puts input to zero to allow a stop
     joy_x_axis = 0.0;
     joy_y_axis = 0.0;
-    ;
     accel_x_axis = 0.0;
 
     do // run this loop until the motors stop
@@ -604,10 +566,7 @@ void button_actions_move_x(int Point)
     } while (motorMoving);
     delay(1);
     UpdateNunChuck();
-    if (z_button)
-    {
-      progstep_backward();
-    }
+    progstep_backward();
   }
 }
 
@@ -619,23 +578,25 @@ void Set_Cam_Interval()
     lcd.empty();
     draw(17, 1, 1); // lcd.at(1,1,"Set Sht Interval");
     delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(18, 1, 1); // lcd.at(1,1,"Intval:   .  sec");
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
     DisplayInterval();
     first_time = false;
+    UpdateNunChuck();
   }
 
-  UpdateNunChuck();
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    UpdateNunChuck();
 
-  unsigned int intval_last = intval;
-  intval = updateProgType(intval, joy_capture3(), 2, 6000, 1);
-  if (intval_last != intval) { DisplayInterval(); }
+    unsigned int intval_last = intval;
+    intval = updateProgType(intval, joy_capture_y(), 2, 6000, 1);
+    if (intval_last != intval) { DisplayInterval(); }
 
-  button_actions_intval(intval); // read buttons, look for c button press to set interval
-  delay(70);
-  // delay (prompt_delay);
+    button_actions_intval(intval); // read buttons, look for c button press to set interval
+  }
 }
 
 void DisplayInterval()
@@ -677,11 +638,8 @@ void DisplayInterval()
 
 void button_actions_intval(unsigned int intval)
 {
-  // Serial.print ("entered action3 loop \r\n");
-  switch (c_button) // looking for c button press to set interval
+  if (c_button && !z_button) // looking for c button press to set interval
   {
-  case 1: // con
-    // user_input();
     interval = (long)intval * 100; // tenths of a second to ms
     // camera_exp_tm=100;
     if (intval == EXTTRIG_INTVAL) // means ext trigger
@@ -700,21 +658,11 @@ void button_actions_intval(unsigned int intval)
     delay(prompt_time);
     lcd.empty();
     progstep_forward();
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back to step 1
-    {
-    case 1: // z button on
-      // user_input();
+  if (z_button && !c_button)
+  {
       progstep_backward();
-      break;
-
-    default:
-      break;
-    }
-  default:
-    break;
   }
 }
 
@@ -727,7 +675,6 @@ void Set_Duration() // This is really setting frames
     draw(32, 1, 5); // lcd.at(1,5,    "Set Move");
     draw(33, 2, 5); // lcd.at(2,5,    "Duration");
     delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(34, 1, 10); // lcd.at(1,9,"H:MM:SS");
     if ((intval > 3) || (intval == EXTTRIG_INTVAL))
@@ -745,37 +692,41 @@ void Set_Duration() // This is really setting frames
     camera_total_shots = camera_moving_shots;
     // Display_Duration();
     first_time = false;
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
-  UpdateNunChuck();
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    UpdateNunChuck();
 
-  if (intval == VIDEO_INTVAL)
-  { // video
+    if (intval == VIDEO_INTVAL)
+    { // video
 
-    unsigned int overaldur_last = overaldur;
-    overaldur = updateProgType(overaldur, joy_capture3(), 1, 10000, 1);
-    if (overaldur_last != overaldur)
-    {
-      calc_time_remain_dur_sec(overaldur);
-      display_time(1, 1);
+      unsigned int overaldur_last = overaldur;
+      overaldur = updateProgType(overaldur, joy_capture_y(), 1, 10000, 1);
+      if (overaldur_last != overaldur)
+      {
+        calc_time_remain_dur_sec(overaldur);
+        display_time(1, 1);
+      }
     }
+    else
+    { // sms
+
+      unsigned int camera_moving_shots_last = camera_moving_shots;
+      camera_moving_shots = updateProgType(camera_moving_shots, joy_capture_y(), 10, 10000, 1);
+
+      camera_total_shots = camera_moving_shots; // we add in lead in lead out later
+      if (camera_moving_shots_last != camera_moving_shots)
+      {
+        Display_Duration();
+
+      } // end update time and shots
+    } // end sms
+
+    button_actions_overaldur(); // read buttons, look for c button press to set overall time
   }
-  else
-  { // sms
-
-    unsigned int camera_moving_shots_last = camera_moving_shots;
-    camera_moving_shots = updateProgType(camera_moving_shots, joy_capture3(), 10, 10000, 1);
-
-    camera_total_shots = camera_moving_shots; // we add in lead in lead out later
-    if (camera_moving_shots_last != camera_moving_shots)
-    {
-      Display_Duration();
-
-    } // end update time and shots
-  } // end sms
-
-  button_actions_overaldur(); // read buttons, look for c button press to set overall time
-  delay(prompt_delay);
 }
 
 void Display_Duration()
@@ -809,32 +760,17 @@ void Display_Duration()
 
 void button_actions_overaldur()
 {
-  // Serial.print ("entered action3 loop \r\n");
-  switch (c_button) // looking for c button press
+  if (c_button && !z_button) // looking for c button press
   {
-  case 1: //
-    // user_input();
-
     lcd.empty();
     draw(35, 1, 3); // lcd.at(1,3,"Duration Set");
     delay(prompt_time);
     progstep_forward();
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back to step 5
-    {
-    case 1: // button on
-      // user_input();
-      progstep_backward();
-      break;
-    default:
-
-      break;
-    }
-  default:
-
-    break;
+  if (z_button && !c_button)
+  {
+    progstep_backward();
   }
 }
 
@@ -845,7 +781,6 @@ void Set_Static_Time()
     lcd.empty();
     draw(22, 1, 1); // lcd.at(1,1,"Set Static Time");
     delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(23, 1, 1);                                 // lcd.at(1,1,"Stat_T:   .  sec");
     draw(3, 2, 1);                                  // lcd.at(2,1,CZ1);
@@ -856,16 +791,20 @@ void Set_Static_Time()
       max_shutter = 1000; // pano mode - allows
     DisplayStatic_tm();
     first_time = false;
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
-  UpdateNunChuck();
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    UpdateNunChuck();
 
-  unsigned int static_tm_last = static_tm;
-  static_tm = updateProgType(static_tm, joy_capture3(), 1, max_shutter, 1);
-  if (static_tm_last != static_tm) { DisplayStatic_tm(); }
+    unsigned int static_tm_last = static_tm;
+    static_tm = updateProgType(static_tm, joy_capture_y(), 1, max_shutter, 1);
+    if (static_tm_last != static_tm) { DisplayStatic_tm(); }
 
-  button_actions_stat_time(static_tm); // read buttons, look for c button press to set interval
-  delay(prompt_delay);
+    button_actions_stat_time(static_tm); // read buttons, look for c button press to set interval
+  }
 }
 
 void DisplayStatic_tm()
@@ -903,33 +842,19 @@ void DisplayStatic_tm()
 
 void button_actions_stat_time(unsigned int exposure)
 {
-  switch (c_button) // looking for c button press
+  if (c_button && !z_button) // looking for c button press
   {
-  case 1: // con
-    // user_input();
-    // if (intval!=3)  camera_exp_tm=(long)static_tm*100; //want to get to ms, but this is already multipled by 10 // 3 is used for video mode - this is likely obsolete-remove later
-
     lcd.empty();
 
     draw(25, 1, 1); // lcd.at(1,1,"Static Time Set"); // try this to push correct character
     delay(prompt_time);
     lcd.empty();
     progstep_forward();
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back to step 1
-    {
-    case 1: // z button on
-      // user_input();
-      progstep_backward();
-      break;
-
-    default:
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    progstep_backward();
   }
 }
 
@@ -940,7 +865,6 @@ void Set_Ramp()
     lcd.empty();
     draw(29, 1, 1); // lcd.at(1,1,"    Set Ramp");
     delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(30, 1, 1); // lcd.at(1,1,"Ramp:     Frames");
     if (intval == VIDEO_INTVAL)
@@ -952,16 +876,20 @@ void Set_Ramp()
     draw(3, 2, 1); // lcd.at(2,1,CZ1);
     DisplayRampval();
     first_time = false;
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
-  UpdateNunChuck();
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    UpdateNunChuck();
 
-  unsigned int rampval_last = rampval;
-  rampval = updateProgType(rampval, joy_capture3(), 1, camera_moving_shots / 3, 1);
-  if (rampval_last != rampval) { DisplayRampval(); }
+    unsigned int rampval_last = rampval;
+    rampval = updateProgType(rampval, joy_capture_y(), 1, camera_moving_shots / 3, 1);
+    if (rampval_last != rampval) { DisplayRampval(); }
 
-  button_actions_rampval(); // read buttons, look for c button press to set interval
-  delay(prompt_delay);
+    button_actions_rampval(); // read buttons, look for c button press to set interval
+  }
 }
 
 void DisplayRampval()
@@ -975,13 +903,8 @@ void DisplayRampval()
 
 void button_actions_rampval()
 {
-
-  switch (c_button) // looking for c button press
+  if (c_button && !z_button)
   {
-  case 1: //
-          // user_input();
-          // we actually don't store anything here - wait for final confirmation to set everything
-
     if (intval == VIDEO_INTVAL)
     {
       delay(1);
@@ -991,34 +914,22 @@ void button_actions_rampval()
     draw(31, 1, 5); // lcd.at(1,5,"Ramp Set");
     delay(prompt_time);
     progstep_forward();
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back
-    {
-    case 1: // button on
-      // user_input();
-      progstep_backward();
-
-      break;
-    default:
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    progstep_backward();
   }
 }
 
 void Set_LeadIn_LeadOut()
 {
-
   if (first_time)
   {
     lcd.empty();
     draw(36, 1, 1); // lcd.at(1,1,"Set Static Lead");
     draw(37, 2, 2); // lcd.at(2,2,"In/Out Frames");
     delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     draw(38, 1, 6); // lcd.at(1,1,"IN -    Out");
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
@@ -1026,21 +937,25 @@ void Set_LeadIn_LeadOut()
     lcd.at(1, 9, lead_out);
     cursorpos = 1;
     DisplayLeadIn_LeadOut();
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
-  int joyxysum_last = joy_x_axis + joy_y_axis; // figure out if changing
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    int joyxysum_last = joy_x_axis + joy_y_axis; // figure out if changing
 
-  UpdateNunChuck();
+    UpdateNunChuck();
 
-  cursorpos = updateProgType(cursorpos, joy_capture_x1(), 1, 2, 1);
+    cursorpos = updateProgType(cursorpos, joy_capture_x1(), 1, 2, 1);
 
-  if (joyxysum_last != (joy_x_axis + joy_y_axis) || abs(joy_x_axis + joy_y_axis) > 10)
-  { // check to see if there is an input, otherwise don't update display
-    DisplayLeadIn_LeadOut();
+    if (joyxysum_last != (joy_x_axis + joy_y_axis) || abs(joy_x_axis + joy_y_axis) > 10)
+    { // check to see if there is an input, otherwise don't update display
+      DisplayLeadIn_LeadOut();
+    }
+
+    button_actions_lead_in_out(); // read buttons, look for c button press to ramp
   }
-
-  button_actions_lead_in_out(); // read buttons, look for c button press to ramp
-  delay(prompt_delay);
 }
 
 void DisplayLeadIn_LeadOut()
@@ -1054,7 +969,7 @@ void DisplayLeadIn_LeadOut()
 
     lcd.cursorOff();
 
-    lead_in = updateProgType(lead_in, joy_capture3(), 1, 5000, 1);
+    lead_in = updateProgType(lead_in, joy_capture_y(), 1, 5000, 1);
 
     lcd.at(1, 1, lead_in);
 
@@ -1078,7 +993,7 @@ void DisplayLeadIn_LeadOut()
 
     lcd.cursorOff();
 
-    lead_out = updateProgType(lead_out, joy_capture3(), 1, 5000, 1);
+    lead_out = updateProgType(lead_out, joy_capture_y(), 1, 5000, 1);
 
     lcd.at(1, 9, lead_out);
 
@@ -1100,79 +1015,21 @@ void DisplayLeadIn_LeadOut()
 
 void button_actions_lead_in_out()
 {
-  switch (c_button) // looking for c button press
+  if (c_button && !z_button)
   {
-  case 1: //
-    // user_input();
     lcd.cursorOff();
     lcd.empty();
     draw(39, 1, 1); // lcd.at(1,1,"Lead Frames Set");
     Calculate_Shot();
 
-    /*		//start  of code block to be moved from LeadinLeadOut.  Replaced with Calculate_Shot()
-                       camera_total_shots=camera_moving_shots+lead_in+lead_out;
-
-                      if (intval==VIDEO_INTVAL) {
-                        //if (intval==VIDEO_INTVAL) camera_moving_shots=(overaldur*1000L)/interval; //figure out moving shots based on duration for video only
-                        //camera_moving_shots=video_segments; //hardcode this and back into proper interval - this is XXX segments per sequence
-                        //camera_moving_shots=100; //new method to allow for easy ramp %
-                        //interval=overaldur*1000L/camera_moving_shots;   //This gives us ms
-                        camera_total_shots=camera_moving_shots+lead_in+lead_out; //good temp variable for display
-                      }
-
-
-                      //fix issues with ramp that is too big
-                      if( rampval*3 > camera_moving_shots ) {    // we have an issue where the ramp is to big can be 2/3 of total move, but not more.
-                            rampval=camera_moving_shots/3; //set to 1/3 up and 1/3 down (2/3) of total move)
-                      }
-
-
-                      //Set keyframe points for program to help with runtime calcs
-                        keyframe[0][0]=0; //start frame
-                        keyframe[0][1]=lead_in; //beginning of ramp
-                        keyframe[0][2]=lead_in+rampval; //end of ramp, beginning of linear
-                        keyframe[0][3]=lead_in+camera_moving_shots-rampval;  //end or linear, beginning of rampdown
-                        keyframe[0][4]=lead_in+camera_moving_shots; //end of rampdown, beginning of leadout
-                        keyframe[0][5]=lead_in+camera_moving_shots+lead_out; //end of leadout, end of program
-
-                        if (DEBUG_MOTOR) {
-                            for (int i=0; i < 6; i++){
-                                Serial.print("Keyframe");Serial.print(i);Serial.print("_");Serial.println(keyframe[0][i]);
-                            }
-                        }
-
-                       //go_to_origin_slow();
-                       go_to_start_new();
-
-
-
-                       //write_all_ram_to_eeprom(); //set this here to allow us to rerun this program from this point if we just want to turn it on review and go
-                       //restore_from_eeprom_memory();
-                       if (DEBUG) review_RAM_Contents();
-
-                       //delay(prompt_time);
-                       if (POWERSAVE_PT>2)   disable_PT();
-                       if (POWERSAVE_AUX>2)   disable_AUX();
-    */
-    // end of code block to be moved from LeadinLeadOut
-
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     progstep_forward();
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back
-    {
-    case 1: // button on
-      lcd.cursorOff();
-      // user_input();
-      progstep_backward();
-      break;
-    default:
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    lcd.cursorOff();
+    progstep_backward();
   }
 }
 
@@ -1238,16 +1095,14 @@ void Review_Confirm()
     lcd.empty();
     draw(41, 1, 4); // lcd.at(1,4,"Review and");
     draw(42, 2, 2); // lcd.at(2,2,"Confirm Setting");
-    // delay(prompt_time);
     delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(100);
     lcd.empty();
     first_time = false;
     diplay_last_tm = millis();
     DisplayReviewProg();
     reviewprog = 2;
     start_delay_sec = 0;
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - diplay_last_tm) > (prompt_time * 4))
@@ -1263,17 +1118,20 @@ void Review_Confirm()
 
   } // end test for display update
 
-  UpdateNunChuck();
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    UpdateNunChuck();
 
-  if (abs(joy_y_axis) > 20)
-  { // do read time updates to delay program
-    reviewprog = 4;
-    DisplayReviewProg();
-    diplay_last_tm = millis();
+    if (abs(joy_y_axis) > 20)
+    { // do read time updates to delay program
+      reviewprog = 4;
+      DisplayReviewProg();
+      diplay_last_tm = millis();
+    }
+
+    button_actions_review();
   }
-
-  button_actions_review();
-  delay(prompt_delay);
 }
 
 void DisplayReviewProg()
@@ -1314,7 +1172,7 @@ void DisplayReviewProg()
       first_time2 = false;
     }
 
-    start_delay_sec = updateProgType(start_delay_sec, joy_capture3(), 0, 43200, 1);
+    start_delay_sec = updateProgType(start_delay_sec, joy_capture_y(), 0, 43200, 1);
 
     calc_time_remain_dur_sec(start_delay_sec);
     display_time(2, 1);
@@ -1329,10 +1187,8 @@ void DisplayReviewProg()
 
 void button_actions_review()
 {
-  switch (c_button) // looking for c button press start
+  if (c_button && !z_button)
   {
-  case 1: //
-    // user_input();
     lcd.empty();
     MOVE_REVERSED_FOR_RUN = false;                           // Reset This
     start_delay_tm = ((millis() / 1000L) + start_delay_sec); // system seconds in the future - use this as big value to compare against
@@ -1391,28 +1247,13 @@ void button_actions_review()
 
     first_time = true;
     lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back to step 6
-    {
-    case 1: // button on
-      // user_input();
-      progstep_backward();
-      break;
-    default:
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    progstep_backward();
   }
 }
-
-// void DelayStart ()
-
-//{
-//  delay(1);
-//}
 
 void progstep_forward()
 {
@@ -1446,11 +1287,8 @@ void progstep_goto(unsigned int prgstp)
 
 void button_actions_end_of_program()
 {                   // repeat - need to turn off the REVERSE_PROG_ORDER flag
-  switch (c_button) // looking for c button for Repeat
+  if (c_button && !z_button)
   {
-  case 1: //
-    // Normal
-
     REVERSE_PROG_ORDER = false;
     if (POWERSAVE_PT > 2)
       disable_PT();
@@ -1474,44 +1312,33 @@ void button_actions_end_of_program()
       go_to_start_new();
       progstep_goto(8);
     }
+  }
 
-    break;
-
-  case 0:
-    switch (z_button) // Reverse
+  if (z_button && !c_button)
+  {
+    REVERSE_PROG_ORDER = true;
+    if (POWERSAVE_PT > 2)
+      disable_PT();
+    if (POWERSAVE_AUX > 2)
+      disable_AUX();
+    // Program_Engaged=true;
+    camera_fired = 0;
+    lcd.bright(8);
+    if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE)
     {
-    case 1: // button on
-      REVERSE_PROG_ORDER = true;
-      if (POWERSAVE_PT > 2)
-        disable_PT();
-      if (POWERSAVE_AUX > 2)
-        disable_AUX();
-      // Program_Engaged=true;
-      camera_fired = 0;
-      lcd.bright(8);
-      if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE)
-      {
-        go_to_start_new();
-        progstep_goto(8);
-      }
-      else if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE)
-      {
-        go_to_start_new();
-        progstep_goto(109);
-      }
-      else if (progtype == AUXDISTANCE)
-      {
-        go_to_start_new();
-        progstep_goto(8);
-      }
-
-      break;
-
-    default:
-      break;
+      go_to_start_new();
+      progstep_goto(8);
     }
-  default:
-    break;
+    else if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE)
+    {
+      go_to_start_new();
+      progstep_goto(109);
+    }
+    else if (progtype == AUXDISTANCE)
+    {
+      go_to_start_new();
+      progstep_goto(8);
+    }
   }
 }
 
@@ -1586,95 +1413,16 @@ else if (intval==EXTTRIG_INTVAL)  { //manual trigger/ext trigge
 
 } // end of 91
 
-int joy_capture2() // captures joystick input
+int joy_capture_y()
 {
-  prompt_delay = (500 - 5 * abs(joy_y_axis));
-  // Serial.print("slow");Serial.println(prompt_delay);
-  return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
-}
-
-int joy_capture3() // captures joystick input and conditions it for UI
-{
-
-  if (joy_y_lock_count > 245)
-  { // really really fast
-    // Serial.println("reallyreallyfast");
-    prompt_delay = 0;
-    return -1 * map(joy_y_axis, -55, 55, -40, 40);
-  }
-  if (joy_y_lock_count > 50)
-  { // really fast
-    // Serial.println("reallyfast");
-    prompt_delay = 10;
-    return -1 * map(joy_y_axis, -100, 100, -10, 10);
-  }
-  else if (joy_y_lock_count > 20)
-  { // pretty fast
-    // Serial.println("prettyfast");
-    prompt_delay = 70;
-    return -1 * map(joy_y_axis, -80, 80, -10, 10);
-  }
-  else if (abs(joy_y_axis) > 10)
-  { // go variable add delay which we run later
-    prompt_delay = (500 - 6 * abs(joy_y_axis));
-    if (prompt_delay < 0)
-      prompt_delay = 15;
-    // Serial.print("slow");Serial.println(prompt_delay);
-    return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
-  }
-  else
-  { // null loop
-    // Serial.println("nullloop");
-    prompt_delay = 0;
-    return (0);
-  }
-}
-
-int joy_capture_4() // captures joystick input and conditions it for UI
-{
-
-  if (joy_y_lock_count > 100)
-  { // really really fast
-    // Serial.println("reallyreallyfast");
-    prompt_delay = 0;
-    return -1 * map(joy_y_axis, -55, 55, -40, 40);
-  }
-  if (joy_y_lock_count > 50)
-  { // really fast
-    // Serial.println("reallyfast");
-    prompt_delay = 10;
-    return -1 * map(joy_y_axis, -100, 100, -10, 10);
-  }
-  else if (joy_y_lock_count > 20)
-  { // pretty fast
-    // Serial.println("prettyfast");
-    prompt_delay = 70;
-    return -1 * map(joy_y_axis, -80, 80, -10, 10);
-  }
-  else if (abs(joy_y_axis) > 10)
-  { // go variable add delay which we run later
-    prompt_delay = (500 - 6 * abs(joy_y_axis));
-    if (prompt_delay < 0)
-      prompt_delay = 15;
-    // Serial.print("slow");Serial.println(prompt_delay);
-    return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
-  }
-  else
-  { // null loop
-    // Serial.println("nullloop");
-    prompt_delay = 0;
-    return (0);
-  }
-}
-
-int joy_capture_x1() // captures joystick input
-{
-  int returned_val = 0;
-  returned_val = map(joy_x_axis, -80, 80, -5, 6);
-  // Serial.print(returned_val);
-  if (abs(returned_val) > 3)
-    delay(150);
-  return returned_val;
+  if (abs(joy_y_axis) > 10)
+  {
+    auto scale = joy_y_lock_count / 6;
+    int output = -1 * map(joy_y_axis, -100, 100, -scale, scale);
+    if (output == 0) { output = (joy_y_axis > 0 ? -1 : 1); }
+    return output;
+  } 
+  return 0;
 }
 
 int joy_capture_y1() // captures joystick input for up down
@@ -1682,63 +1430,21 @@ int joy_capture_y1() // captures joystick input for up down
   return map(joy_y_axis, -85, 85, -1, 1);
 }
 
-int joy_capture_x3_V2() // captures joystick input and conditions it for UI
+int joy_capture_x() // captures joystick input and conditions it for UI
 {
   if (abs(joy_x_axis) > 10)
-  { // go variable add delay which we run later
-    uint8_t step_size = joy_x_lock_count / 5;
-    if (step_size == 0)
-    {
-      step_size = 1;
-    }
-    prompt_delay = (500 - 4 * abs(joy_x_axis));
-    if (prompt_delay < 15)
-      prompt_delay = 15;
-    return -1 * constrain(map(-joy_x_axis, -20, 20, -1, 2), -step_size, step_size);
-  }
-  else
   {
-    prompt_delay = 15;
-    return 0;
-  }
+    auto scale = joy_x_lock_count / 6;
+    int output = -1 * map(joy_x_axis, -100, 100, -scale, scale);
+    if (output == 0) { output = (joy_x_axis > 0 ? -1 : 1); }
+    return output;
+  } 
+  return 0;
 }
 
-int joy_capture_x3() // captures joystick input and conditions it for UI
+int joy_capture_x1() // captures joystick input
 {
-
-  if (joy_x_lock_count > 245)
-  { // really really fast
-    // Serial.println("reallyreallyfast");
-    prompt_delay = 0;
-    return -1 * map(-joy_x_axis, -55, 55, -40, 40);
-  }
-  else if (joy_x_lock_count > 50)
-  { // really fast
-    // Serial.println("reallyfast");
-    prompt_delay = 10;
-    return -1 * map(-joy_x_axis, -100, 100, -10, -10);
-  }
-  else if (joy_x_lock_count > 20)
-  { // pretty fast
-    // Serial.println("prettyfast");
-    prompt_delay = 70;
-    return -1 * map(-joy_x_axis, -80, 80, -10, 10);
-  }
-
-  else if (abs(joy_x_axis) > 10)
-  { // go variable add delay which we run later
-    prompt_delay = (500 - 6 * abs(joy_x_axis));
-    if (prompt_delay < 15)
-      prompt_delay = 15;
-    // Serial.print("slow");Serial.println(prompt_delay);
-    return -1 * constrain(map(-joy_x_axis, -20, 20, -1, 2), -1, 1);
-  }
-  else
-  { // null loop
-    // Serial.println("nullloop");
-    prompt_delay = 0;
-    return (0);
-  }
+  return map(joy_x_axis, -85, 85, -1, 1);
 }
 
 void display_status()
@@ -1754,7 +1460,6 @@ void display_status()
     lcd.at(2, 13, ".");
     lcd.at(2, 16, "v");
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // lcd.empty();
     first_time = false;
   }
   // update upper left camera fired/total shots
@@ -1895,16 +1600,14 @@ void calc_time_remain()
 {
   timeh = ((((float)camera_total_shots - (float)camera_fired) * (float)interval) / 3600000);              // hours
   timem = ((((float)camera_total_shots - (float)camera_fired) * (float)interval) / 60000) - (timeh * 60); // minutes  - could use modulus, but more confusing
-  time_s = ((((float)camera_total_shots - (float)camera_fired) * (float)interval) / 1000) - (timeh * 3600) - (timem * 60);
-  ; // seconds
+  time_s = ((((float)camera_total_shots - (float)camera_fired) * (float)interval) / 1000) - (timeh * 3600) - (timem * 60); // seconds
 }
 
 void calc_time_remain_dur_sec(unsigned int sec)
 {
   timeh = ((float)(sec) / 3600);              // hours
   timem = ((float)(sec) / 60) - (timeh * 60); // minutes  - could use modulus, but more confusing
-  time_s = ((float)(sec) / 1) - (timeh * 3600) - (timem * 60);
-  ; // seconds
+  time_s = ((float)(sec) / 1) - (timeh * 3600) - (timem * 60); // seconds
 }
 
 void calc_time_remain_start_delay()
@@ -1912,8 +1615,7 @@ void calc_time_remain_start_delay()
   unsigned long current_sec = (millis() / 1000);
   timeh = ((float)(start_delay_tm - current_sec) / 3600);              // hours
   timem = ((float)(start_delay_tm - current_sec) / 60) - (timeh * 60); // minutes  - could use modulus, but more confusing
-  time_s = ((float)(start_delay_tm - current_sec) / 1) - (timeh * 3600) - (timem * 60);
-  ; // seconds
+  time_s = ((float)(start_delay_tm - current_sec) / 1) - (timeh * 3600) - (timem * 60); // seconds
 }
 
 void display_time(int row, int col)
@@ -1975,7 +1677,6 @@ void Enter_Aux_Endpoint()
     // Serial.println(current_steps.z);
     // Serial.println(int(current_steps.z/STEPS_PER_INCH_AUX));
 
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     lcd.at(1, 1, "AuxDist:   .  In");
     draw(3, 2, 1); // lcd.at(2,1,CZ1);
@@ -1983,28 +1684,24 @@ void Enter_Aux_Endpoint()
     aux_dist = int((current_steps.z * 10) / STEPS_PER_INCH_AUX); // t
     DisplayAUX_Dist();
     first_time = false;
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
-  UpdateNunChuck();
-
-  int aux_dist_last = aux_dist;
-  aux_dist = updateProgType(aux_dist, joy_capture3(), -MAX_AUX_MOVE_DISTANCE, MAX_AUX_MOVE_DISTANCE, 1);
-
-  // STEPS_PER_INCH_AUX
-
-  if (aux_dist_last != aux_dist)
+  if ((millis() - NClastread) > 50)
   {
-    DisplayAUX_Dist();
+    NClastread = millis();
+    UpdateNunChuck();
+
+    int aux_dist_last = aux_dist;
+    aux_dist = updateProgType(aux_dist, joy_capture_y(), -MAX_AUX_MOVE_DISTANCE, MAX_AUX_MOVE_DISTANCE, 1);
+    if (aux_dist_last != aux_dist) { DisplayAUX_Dist(); }
+
+    // lcd.at(1,1,aux_dist/10);
+    // lcd.at(1,7,aux_dist%10);
+    // motor_steps_pt[2][2]=(aux_dist*47812L)/10;
+    // lcd.at(2,1,(long)motor_steps_pt[2][2]);
+    button_actions_Enter_Aux_Endpoint(); // read buttons, look for c button press to set interval
   }
-
-  // lcd.at(1,1,aux_dist/10);
-  // lcd.at(1,7,aux_dist%10);
-  // motor_steps_pt[2][2]=(aux_dist*47812L)/10;
-  // lcd.at(2,1,(long)motor_steps_pt[2][2]);
-  button_actions_Enter_Aux_Endpoint(); // read buttons, look for c button press to set interval
-  delay(prompt_delay);
-
-  // delay(1);
 }
 
 void DisplayAUX_Dist()
@@ -2045,44 +1742,21 @@ void DisplayAUX_Dist()
 
 void button_actions_Enter_Aux_Endpoint()
 {
-
-  switch (c_button)
+  if (c_button && !z_button)
   {
+    lcd.empty();
+    motor_steps_pt[0][2] = 0.0;                                                  // this sets the end point
+    motor_steps_pt[1][2] = 0.0;                                                  // this sets the end point
+    motor_steps_pt[2][2] = (float(aux_dist) * float(STEPS_PER_INCH_AUX)) / 10.0; // this sets the end point
+    Serial.println(motor_steps_pt[2][2]);
+    lcd.at(1, 2, "Aux End Pt. Set");
+    delay(prompt_time);
+    progstep_forward();
+  }
 
-  case 1: // con
-    switch (z_button)
-    {
-    case 1: // con zon
-      break;
-
-    case 0: // con zoff
-            // user_input();
-
-      // calculate_deltas();
-
-      lcd.empty();
-      motor_steps_pt[0][2] = 0.0;                                                  // this sets the end point
-      motor_steps_pt[1][2] = 0.0;                                                  // this sets the end point
-      motor_steps_pt[2][2] = (float(aux_dist) * float(STEPS_PER_INCH_AUX)) / 10.0; // this sets the end point
-      Serial.println(motor_steps_pt[2][2]);
-      lcd.at(1, 2, "Aux End Pt. Set");
-      delay(prompt_time);
-      progstep_forward();
-      break;
-    }
-  case 0:
-    switch (z_button) // this would send us back to step 1
-    {
-    case 1: // z button on
-      // user_input();
-      progstep_backward();
-      break;
-
-    default:
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    progstep_backward();
   }
 }
 

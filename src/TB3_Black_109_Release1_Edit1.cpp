@@ -162,7 +162,6 @@ unsigned int lcd_dim_tm = 10;
 unsigned long diplay_last_tm = 0;
 unsigned int prompt_time = 350; // in ms for delays of instructions
 // unsigned int  prompt_time=350; // for faster debugging
-int prompt_delay = 0; // to help with joystick reads and delays for inputs - this value is set during joystick read and executed later in the loop
 int prompt_val;
 int reviewprog = 1;
 
@@ -405,7 +404,6 @@ void setup()
   for (int reads = 1; reads < 17; reads++)
   {
     UpdateNunChuck();
-    // Nunchuck.printData();
     lcd.at(2, reads, "+");
     if (abs(Nunchuck.joyx() - 127) > 60 || abs(Nunchuck.joyy() - 127) > 60)
     {
@@ -789,7 +787,7 @@ void loop()
 
         Static_Time_Engaged = true;
         // Fire Camera
-        if (intval != 3)
+        if (intval != EXTTRIG_INTVAL)
           fire_camera((long)static_tm * 100); // start shutter sequence
         camera_fired++;
       }
@@ -832,7 +830,7 @@ void loop()
           disable_AUX(); //
 
         // Update display
-        if (intval != 3)
+        if (intval != EXTTRIG_INTVAL)
           display_status(); // update after shot complete to avoid issues with pausing
 
         Shot_Sequence_Engaged = false; // Shot sequence engaged flag is is off - we are ready for our next
@@ -1146,6 +1144,7 @@ void loop()
         lcd.empty();
         lcd.at(1, 4, "Repeat - C");
         lcd.at(2, 4, "Reverse - Z");
+        delay(prompt_time);
         UpdateNunChuck();
         first_time = false;
         delay(100);
@@ -1268,10 +1267,10 @@ void loop()
 
         //
 
-        if (P2PType == 0)
+        if (P2PType == false)
         {
           Serial.println("finished basic move");
-          if (intval != 3)
+          if (intval != EXTTRIG_INTVAL)
             display_status(); // update after shot complete to avoid issues with pausing
           Move_Engaged = false;
           Shot_Sequence_Engaged = false; // Shot sequence engaged flag is is off - we are ready for our next
@@ -1300,7 +1299,7 @@ void loop()
         if (Shot_Sequence_Engaged && Move_Engaged && motorMoving == 0) // motors completed the move
         {
           Serial.println("finished accel move");
-          if (intval != 3)
+          if (intval != EXTTRIG_INTVAL)
             display_status(); // update after shot complete to avoid issues with pausing
           Move_Engaged = false;
           Shot_Sequence_Engaged = false; // Shot sequence engaged flag is is off - we are ready for our next
@@ -1342,9 +1341,9 @@ void loop()
         stopISR1();
         draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
         draw(59, 2, 1); // lcd.at(2,1," Repeat Press C");
+        delay(prompt_time);
         UpdateNunChuck();
         first_time = false;
-        delay(100);
       }
       UpdateNunChuck();
       button_actions290(); // read buttons, look for c button press to start run

@@ -6,15 +6,14 @@ void Setup_AUX_ON()
   {
     lcd.empty();
     draw(74, 1, 1); // lcd.at(1,1,"Aux Motor:");
-    if (AUX_ON)
-      lcd.at(1, 12, "ON");
-    else
-      lcd.at(1, 12, "OFF");
+    if (AUX_ON) { lcd.at(1, 12, "ON "); }
+    else        { lcd.at(1, 12, "OFF"); }
 
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = false;
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+    NClastread = millis();
   }
 
   if ((millis() - NClastread) > 50)
@@ -24,7 +23,10 @@ void Setup_AUX_ON()
 
     auto lastAUX_ON = AUX_ON;
     AUX_ON = updateProgType(AUX_ON, joy_capture_y1(), 0, 1, 1);
-    if (lastAUX_ON != AUX_ON) {first_time = true;}
+    if (lastAUX_ON != AUX_ON) {
+      if (AUX_ON) { lcd.at(1, 12, "ON "); }
+      else        { lcd.at(1, 12, "OFF"); }
+    }
 
     if (c_button || z_button)
     {
@@ -76,7 +78,6 @@ void Setup_PAUSE_ENABLED()
     if (c_button || z_button)
     {
       eeprom_write(101, PAUSE_ENABLED);
-      // progtype=0;
       if (c_button)
         progstep_forward();
       else
@@ -179,7 +180,6 @@ void Setup_POWERSAVE_AUX()
     {
       eeprom_write(98, POWERSAVE_AUX);
       progtype = 0;
-      // lcd.empty();
       if (c_button)
         progstep_forward();
       else

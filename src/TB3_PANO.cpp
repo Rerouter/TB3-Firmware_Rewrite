@@ -40,21 +40,19 @@ void Set_angle_of_view()
 {
   if (first_time)
   {
-
-    AUX_ON = false; // turn of Auz since only PT
+    AUX_ON = false; // turn off Auz since only PT
     lcd.empty();
     // set_position(Pan_AOV_steps, Tilt_AOV_steps, 0.0);
     draw(75, 1, 1); // lcd.at(1,1,"Set Angle o'View");
     draw(76, 2, 2); // lcd.at(2,2,"C-Set, Z-Reset");
     delay(prompt_time);
-    lcd.empty();
 
+    lcd.empty();
     draw(77, 1, 1); // lcd.at(1,1,"Pan AOV: ");
     lcd.at(1, 11, steps_to_deg_decimal(0));
     draw(78, 2, 1); // lcd.at(2,1,"Tilt AOV: ");
     lcd.at(2, 11, steps_to_deg_decimal(0));
     first_time = false;
-    // delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
 
     //   Velocity Engine update
@@ -77,26 +75,27 @@ void Define_Overlap_Percentage()
 {
   if (first_time)
   {
-
     lcd.empty();
     draw(79, 1, 2); // lcd.at(1,2,"   % Overlap");
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
-    // olpercentage=20;
     Display_olpercentage();
     first_time = false;
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
                            // motor_steps_pt[2][0];
   }
-  UpdateNunChuck();
 
-  unsigned int olpercentage_last = olpercentage;
-  olpercentage = updateProgType(olpercentage, joy_capture3(), 1, 99, 1);
-  if (olpercentage_last != olpercentage) { Display_olpercentage(); }
-  // delay(50);
-  
-  button_actions_olpercentage(); // read buttons, look for c button press to set interval
-  delay(prompt_delay);
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    UpdateNunChuck();
+
+    unsigned int olpercentage_last = olpercentage;
+    olpercentage = updateProgType(olpercentage, joy_capture_y(), 1, 99, 1);
+    if (olpercentage_last != olpercentage) { Display_olpercentage(); }
+    
+    button_actions_olpercentage(); // read buttons, look for c button press to set interval
+  }
 }
 
 void Display_olpercentage()
@@ -109,42 +108,31 @@ void Display_olpercentage()
 
 void button_actions_olpercentage()
 {
-
-  switch (c_button) // looking for c button press
-  {
-  case 1:                                  //
-                                           // perform all calcs based on Angle of view and percentage overlap
+  if (c_button && !z_button)
+  {                                        // perform all calcs based on Angle of view and percentage overlap
     Pan_AOV_steps = abs(current_steps.x);  // Serial.println(Pan_AOV_steps);
     Tilt_AOV_steps = abs(current_steps.y); // Serial.println(Tilt_AOV_steps);
 
     steps_per_shot_max_x = float((float(1.0) - float(olpercentage / 100.0)) * float(Pan_AOV_steps));  // Serial.println(steps_per_shot_max_x);
     steps_per_shot_max_y = float((float(1.0) - float(olpercentage / 100.0)) * float(Tilt_AOV_steps)); // Serial.println(steps_per_shot_max_y);
     if (DEBUG_PANO)
+    {
       Serial.print("steps_per_shot_max_x");
-    Serial.println(steps_per_shot_max_x);
-    if (DEBUG_PANO)
+      Serial.println(steps_per_shot_max_x);
+
       Serial.print("steps_per_shot_max_y");
-    Serial.println(steps_per_shot_max_y);
+      Serial.println(steps_per_shot_max_y);
+    }
 
     lcd.empty();
     draw(80, 1, 3); // lcd.at(1,3,"Overlap Set");
     delay(prompt_time);
     progstep_forward();
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back
-    {
-    case 1: // button on
-      // user_input();
-      progstep_backward();
-
-      break;
-    default:
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    progstep_backward();
   }
 }
 
@@ -161,92 +149,107 @@ void Set_PanoArrayType()
     // prompt_val=POWERSAVE_PT;
     lcd.empty();
     lcd.at(1, 2, "Set Array Type");
-    if (PanoArrayType == PANO_9ShotCenter)
+
+    switch (PanoArrayType)
+    {
+    case PANO_9ShotCenter:
       lcd.at(2, 3, "9-Shot Center");
-    else if (PanoArrayType == PANO_25ShotCenter)
+      break;
+    case PANO_25ShotCenter:
       lcd.at(2, 2, "25-Shot Center");
-    else if (PanoArrayType == PANO_7X3)
+      break;
+    case PANO_7X3:
       lcd.at(2, 4, "7x3 Matrix");
-    else if (PanoArrayType == PANO_9X5Type1)
+      break;
+    case PANO_9X5Type1:
       lcd.at(2, 4, "9x5 Type 1");
-    else if (PanoArrayType == PANO_9X5Type2)
+      break;
+    case PANO_9X5Type2:
       lcd.at(2, 4, "9x5 Type 2");
-    else if (PanoArrayType == PANO_5x5TopThird)
+      break;
+    case PANO_5x5TopThird:
       lcd.at(2, 4, "5x5 Top1/3");
-    else if (PanoArrayType == PANO_7X5TopThird)
+      break;
+    case PANO_7X5TopThird:
       lcd.at(2, 4, "7x5 Top1/3");
+      break;
+    default:
+      lcd.at(2, 4, "Invalid");
+      break;
+    }
 
     first_time = false;
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // delay(prompt_time);
   }
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
-  }
 
-  PanoArrayType = updateProgType(PanoArrayType, joy_capture_y1(), 0, PanoArrayTypeOptions - 1, 1);
+    auto lastPanoArrayType = PanoArrayType;
+    PanoArrayType = updateProgType(PanoArrayType, joy_capture_y1(), 0, PanoArrayTypeOptions - 1, 1);
+    if (lastPanoArrayType != PanoArrayType) { first_time = true; }
 
-  if (PanoArrayType == PANO_9ShotCenter)
-  {
-    total_shots_x = 3;
-    total_shots_y = 3;
-  }
-  else if (PanoArrayType == PANO_25ShotCenter)
-  {
-    total_shots_x = 5;
-    total_shots_y = 5;
-  }
-  else if (PanoArrayType == PANO_7X3)
-  {
-    total_shots_x = 7;
-    total_shots_y = 3;
-  }
-  else if (PanoArrayType == PANO_9X5Type1)
-  {
-    total_shots_x = 9;
-    total_shots_y = 5;
-  }
-  else if (PanoArrayType == PANO_9X5Type2)
-  {
-    total_shots_x = 9;
-    total_shots_y = 5;
-  }
-  else if (PanoArrayType == PANO_5x5TopThird)
-  {
-    total_shots_x = 5;
-    total_shots_y = 5;
-  }
-  else if (PanoArrayType == PANO_7X5TopThird)
-  {
-    total_shots_x = 7;
-    total_shots_y = 5;
-  }
+    if (c_button || z_button)
+    {
+      switch (PanoArrayType)
+      {
+        case PANO_9ShotCenter:
+          total_shots_x = 3;
+          total_shots_y = 3;
+          break;
+        case PANO_25ShotCenter:
+          total_shots_x = 5;
+          total_shots_y = 5;
+          break;
+        case PANO_7X3:
+          total_shots_x = 7;
+          total_shots_y = 3;
+          break;
+        case PANO_9X5Type1:
+          total_shots_x = 9;
+          total_shots_y = 5;
+          break;
+        case PANO_9X5Type2:
+          total_shots_x = 9;
+          total_shots_y = 5;
+          break;
+        case PANO_5x5TopThird:
+          total_shots_x = 5;
+          total_shots_y = 5;
+          break;
+        case PANO_7X5TopThird:
+          total_shots_x = 7;
+          total_shots_y = 5;
+          break;
+        default:
+          total_shots_x = 1;
+          total_shots_y = 1;
+          break;
+      }
 
-  total_pano_shots = total_shots_x * total_shots_y; // Serial.print("total_pano_shots = ");Serial.println(total_pano_shots);
-  camera_total_shots = total_pano_shots + 1;        // set this to allow us to compare in main loops
+      total_pano_shots = total_shots_x * total_shots_y; 
+      camera_total_shots = total_pano_shots + 1;        // set this to allow us to compare in main loops
 
-  if (c_button)
-  {
+      if (c_button && !z_button)
+      {
+        // POWERSAVE_PT=prompt_val;
+        // eeprom_write(98, POWERSAVE_PT);
+        // progtype=0;
+        // delay(prompt_time);
+        progstep_forward();
+      }
 
-    // POWERSAVE_PT=prompt_val;
-    // eeprom_write(98, POWERSAVE_PT);
-    // progtype=0;
-    // delay(prompt_time);
-    progstep_forward();
-  }
-
-  if (z_button)
-  {
-
-    // POWERSAVE_PT=prompt_val;
-    // eeprom_write(98, POWERSAVE_PT);
-    // progtype=0;
-    progstep_backward();
+      if (z_button && !c_button)
+      {
+        // POWERSAVE_PT=prompt_val;
+        // eeprom_write(98, POWERSAVE_PT);
+        // progtype=0;
+        progstep_backward();
+      }
+    }
   }
 }
 
@@ -278,7 +281,6 @@ String steps_to_deg_decimal(unsigned long steps)
 
 void Pano_Review_Confirm()
 {
-
   if (first_time)
   {
     lcd.empty();
@@ -286,17 +288,16 @@ void Pano_Review_Confirm()
     draw(42, 2, 2); // lcd.at(2,2,"Confirm Setting");
     // delay(prompt_time);
     delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     first_time = false;
     diplay_last_tm = millis();
     Pano_DisplayReviewProg();
     reviewprog = 1;
+    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - diplay_last_tm) > 1000)
   { // test for display update
-
     reviewprog++;
     diplay_last_tm = millis();
     if (reviewprog > 4)
@@ -305,25 +306,26 @@ void Pano_Review_Confirm()
 
   } // end test for display update
 
-  UpdateNunChuck();
+  if ((millis() - NClastread) > 50)
+  {
+    NClastread = millis();
+    UpdateNunChuck();
 
-  if (abs(joy_y_axis) > 20)
-  { // do read time updates to delay program
-    reviewprog = 4;
-    Pano_DisplayReviewProg();
-    diplay_last_tm = millis();
+    if (abs(joy_y_axis) > 20)
+    { // do read time updates to delay program
+      reviewprog = 4;
+      Pano_DisplayReviewProg();
+      diplay_last_tm = millis();
+    }
+
+    pano_button_actions_review();
   }
-
-  pano_button_actions_review();
-  delay(100);
 }
 
 void pano_button_actions_review()
 {
-  switch (c_button) // looking for c button press start
+  if (c_button && !z_button)
   {
-  case 1: //
-    // user_input();
     lcd.empty();
 
     if (start_delay_sec > 0)
@@ -365,20 +367,11 @@ void pano_button_actions_review()
       display_status();
       // DFloop();
     }
-    break;
+  }
 
-  case 0:
-    switch (z_button) // this would send us back
-    {
-    case 1: // button on
-      // user_input();
-      progstep_backward();
-      break;
-    default:
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    progstep_backward();
   }
 }
 
@@ -387,51 +380,49 @@ void Pano_DisplayReviewProg()
 
   switch (reviewprog)
   {
-  case 1: //
-    lcd.empty();
-    lcd.at(1, 2, "Columns:");
-    lcd.at(2, 5, "Rows:");
-    // lcd.at(1,12,motor_steps[0]);
-    lcd.at(1, 11, total_shots_x);
-    lcd.at(2, 11, total_shots_y);
-    break;
+    case 1: //
+      lcd.empty();
+      lcd.at(1, 2, "Columns:");
+      lcd.at(2, 5, "Rows:");
+      // lcd.at(1,12,motor_steps[0]);
+      lcd.at(1, 11, total_shots_x);
+      lcd.at(2, 11, total_shots_y);
+      break;
 
-  case 2: //
-    lcd.empty();
-    lcd.at(1, 1, "Cam Shots:");
-    lcd.at(1, 12, total_pano_shots);
-    // calc_time_remain();
-    // display_time(2,6);
-    break;
+    case 2: //
+      lcd.empty();
+      lcd.at(1, 1, "Cam Shots:");
+      lcd.at(1, 12, total_pano_shots);
+      // calc_time_remain();
+      // display_time(2,6);
+      break;
 
-  case 3: //
-    lcd.empty();
-    draw(47, 1, 6); // lcd.at(1,6,"Ready?");
-    draw(48, 2, 2); // lcd.at(2,2,"Press C Button");
-    break;
-  case 4: //
-    // lcd.empty();
-    lcd.at(1, 1, "StartDly:    min");
-    lcd.at(2, 2, "Press C Button");
+    case 3: //
+      lcd.empty();
+      draw(47, 1, 6); // lcd.at(1,6,"Ready?");
+      draw(48, 2, 2); // lcd.at(2,2,"Press C Button");
+      break;
+    case 4: //
+      // lcd.empty();
+      lcd.at(1, 1, "StartDly:    min");
+      lcd.at(2, 2, "Press C Button");
 
-    start_delay_sec = updateProgType(start_delay_sec, joy_capture3(), 0, 500, 1);
+      start_delay_sec = updateProgType(start_delay_sec, joy_capture_y(), 0, 500, 1);
 
-    lcd.at(1, 11, start_delay_sec);
-    // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
-    // if (start_delay_min <100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
+      lcd.at(1, 11, start_delay_sec);
+      // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
+      // if (start_delay_min <100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
 
-    break;
-
+      break;
   } // end switch
 }
 
 void move_motors_pano_basic()
 {
-
   int index_x;
   int index_y;
   int x_mod_pass_1;
-  int even_odd_row;
+  boolean even_odd_row;
   int slope_adjustment;
 
   // Figure out which row we are in
@@ -498,7 +489,7 @@ void move_motors_pano_accel()
   int index_x;
   int index_y;
   int x_mod_pass_1;
-  int even_odd_row;
+  boolean even_odd_row;
   int slope_adjustment;
 
   // Figure out which row we are in
@@ -684,10 +675,8 @@ void calc_pano_move() // pano - calculate other values
 
 void button_actions290()
 {                   // repeat
-  switch (c_button) // looking for c button press start
+  if (c_button && !z_button)
   {
-  case 1: //
-    // user_input();
     if (POWERSAVE_PT > 2)
       disable_PT();
     if (POWERSAVE_AUX > 2)
@@ -706,6 +695,5 @@ void button_actions290()
     delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     // lcd.bright(0); //run in dimmed mode
-    break;
   }
 }

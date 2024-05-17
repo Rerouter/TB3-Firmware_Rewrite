@@ -116,12 +116,12 @@ void WiiNunchuck3::init(int power)
 			Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
 			Wire.write((uint8_t)0xF0);					  // sends memory address
 			Wire.write((uint8_t)0x55);					  // sends data.
-			if (Wire.endTransmission() == 0)			  // stop transmitting
+			if (Wire.endTransmission() == false)			  // stop transmitting
 			{
 				Wire.beginTransmission(WII_NUNCHUCK_TWI_ADR); // transmit to device 0x52
 				Wire.write((uint8_t)0xFB);					  // sends memory address
 				Wire.write((uint8_t)0x00);					  // sends sent a zero.
-				if (Wire.endTransmission() == 0)			  // stop transmitting
+				if (Wire.endTransmission() == false)			  // stop transmitting
 				{
 					rc = 0;
 				}

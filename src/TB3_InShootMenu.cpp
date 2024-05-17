@@ -17,52 +17,40 @@ const uint8_t INPROG_STOPMOTION = 99; // Manual Forward and Back
 
 void Check_Prog() // this is a routine for the button presses in the program
 {
-  switch (c_button) // looking for c button press
+  if (c_button && z_button)
   {
-  case 1:                  //  //c on
+    C_Button_Read_Count++;
+    Z_Button_Read_Count++;
+    CZ_Button_Read_Count++;
+
+    delay(10);
+    if ((millis() - input_last_tm) > 2000)
+    {
+      C_Button_Read_Count = 0;
+      Z_Button_Read_Count = 0;
+      CZ_Button_Read_Count = 0;
+      input_last_tm = millis();
+    }
+  }
+
+  if (c_button && !z_button)
+  {
     C_Button_Read_Count++; // c button on
     if ((millis() - input_last_tm) > 2000)
+    {
       C_Button_Read_Count = 0;
-    input_last_tm = millis();
-
-    switch (z_button) // z on
-    {
-    case 1: // Z button on as well
-      CZ_Button_Read_Count++;
-      Z_Button_Read_Count++;
-      delay(10);
-      if ((millis() - input_last_tm) > 2000)
-      {
-        CZ_Button_Read_Count = 0;
-        Z_Button_Read_Count = 0;
-        input_last_tm = millis();
-      }
-      break;
-    default:
-
-      break;
+      input_last_tm = millis();
     }
+  }
 
-  case 0:
-    switch (z_button) // this would send us back to step 5
+  if (z_button && !c_button)  // this would send us back to step 5
+  {
+    Z_Button_Read_Count++; // z button only on
+    if ((millis() - input_last_tm) > 2000)
     {
-    case 1:                  // button on
-      Z_Button_Read_Count++; // z button only on
-      if ((millis() - input_last_tm) > 2000)
-      {
-        Z_Button_Read_Count = 0;
-        input_last_tm = millis();
-      }
-      break;
-    case 0: // button off
-      break;
-    default:
-
-      break;
+      Z_Button_Read_Count = 0;
+      input_last_tm = millis();
     }
-  default:
-
-    break;
   }
 }
 
@@ -90,12 +78,12 @@ void SMS_In_Shoot_Paused_Menu() // this runs once and is quick - not persistent
 
 void SMS_Resume() // this runs once and is quick - not persistent
 {
+  lcd.empty();
+  lcd.at(1, 1, "Resuming");
   CZ_Button_Read_Count = 0;
   CZ_Released = false;    // to prevent entry into this method until CZ button release again
   Program_Engaged = true; // toggle off the loop
-  lcd.empty();
-  lcd.at(1, 1, "Resuming");
-  delay(1000);
+  delay(prompt_time);
   progstep_goto(50); // send us back to the main SMS Loop
 }
 
@@ -106,7 +94,6 @@ void InProg_Select_Option()
   if (first_time)
   {
     lcd.empty();
-
     // Assuming inprogtype is an integer or enum type
     switch (inprogtype) {
         case INPROG_RESUME: // 0
@@ -138,51 +125,45 @@ void InProg_Select_Option()
     }
     lcd.at(2, 1, "UpDown  C-Select");
     first_time = false;
+    delay(prompt_time);
     UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+    NClastread = millis();
     if (POWERSAVE_PT > 2)
       disable_PT();
     if (POWERSAVE_AUX > 2)
       disable_AUX();
-    // delay(prompt_time);
-
   } // end first time
 
   if ((millis() - NClastread) > 50)
   {
     NClastread = millis();
-    // Serial.print("Read");Serial.println(NClastread);
     UpdateNunChuck();
 
     if (inprogtype == INPROG_GOTO_FRAME)
     { // read leftright values for the goto frames
-
       unsigned int goto_shot_last = goto_shot;
-      goto_shot = updateProgType(goto_shot, joy_capture_x3(), 1, camera_total_shots, 1);
+      goto_shot = updateProgType(goto_shot, joy_capture_x(), 1, camera_total_shots, 1);
       if (goto_shot_last != goto_shot) { DisplayGoToShot(); }
     }
 
     if (inprogtype == INPROG_INTERVAL)
     { // read leftright values for the goto frames
-
       unsigned int intval_last = intval;
-      intval = updateProgType(intval, joy_capture_x3(), 5, 6000, 1);
+      intval = updateProgType(intval, joy_capture_x(), 5, 6000, 1);
       if (intval_last != intval) { DisplayInterval(); }
     }
 
     inprogtype = updateProgType(inprogtype, joy_capture_y1(), 0, INPROG_OPTIONS - 1, 1);
     if (CZ_Released)
       button_actions_InProg_Select_Option(); // don't react to buttons unless there has been a CZ release
-    delay(prompt_delay);
-    delay(1);
+    delay(prompt_time);
     }
 }
 
 void button_actions_InProg_Select_Option()
 {
-  switch (c_button)
+  if (c_button && !z_button)
   {
-
-  case 1: // c on - use stored values
     lcd.empty();
     if (inprogtype == INPROG_RESUME)
     { // Resume (unpause)
@@ -272,19 +253,11 @@ void button_actions_InProg_Select_Option()
       }
       inprogtype = INPROG_RESUME;
     }
+  }
 
-    break;
-  case 0:
-    switch (z_button) // do nothing
-    {
-    case 1: // z button on -
-      // progtype=0;
-      // progstep_goto(0);
-      delay(1);
-      break;
-    }
-  default:
-    break;
+  if (z_button && !c_button)
+  {
+    delay(1);
   }
 }
 
