@@ -164,7 +164,6 @@ TxMsgBuffer txMsgBuffer;
 
 void DFSetup()
 {
-
   // delay(1000);
   // lcd.setup();
   // delay(100);
@@ -318,8 +317,7 @@ void DFSetup()
   // comment variable redefinition out as this is setup on start.
 
   // turn on the motors
-  enable_PT();
-  enable_AUX();
+  UpdatePowerSaving(ProgramState::Moving);
 
 // setup serial connection
 #if (BOARD == ARDUINO) || (BOARD == ARDUINOMEGA) || (BOARD == CHIPKITMAX32)
@@ -1460,11 +1458,13 @@ float calculateVelocityMotor(int motorIndex, float local_time, float local_ramp)
   motor->moveMaxAcceleration = motor->moveMaxVelocity / (local_ramp * local_time);
   // return velocitytemp;
   if (DEBUG_MOTOR)
+  {
     Serial.print("moveMaxVelocity:");
-  Serial.println(motor->moveMaxVelocity);
-  if (DEBUG_MOTOR)
+    Serial.println(motor->moveMaxVelocity);
+
     Serial.print("moveMaxAcceleration:");
-  Serial.println(motor->moveMaxAcceleration);
+    Serial.println(motor->moveMaxAcceleration);
+  }
   return new_time; // returns the time
 }
 
@@ -1477,11 +1477,12 @@ void calculateVelocityMotorold(int motorIndex, float local_time, float local_ram
   motor->moveMaxAcceleration = motor->moveMaxVelocity / (local_ramp * local_time);
   // return velocitytemp;
   if (DEBUG_MOTOR)
+  {
     Serial.print("moveMaxVelocity:");
-  Serial.println(motor->moveMaxVelocity);
-  if (DEBUG_MOTOR)
+    Serial.println(motor->moveMaxVelocity);
     Serial.print("moveMaxAcceleration:");
-  Serial.println(motor->moveMaxAcceleration);
+    Serial.println(motor->moveMaxAcceleration);
+  }
 }
 
 void synched3PtMove_max(float xtarget, float ytarget, float ztarget) //
@@ -1516,10 +1517,12 @@ void synched3PtMove_max(float xtarget, float ytarget, float ztarget) //
       MotorTotalMoveTime[mot] += motors[mot].moveTime[seg];
     }
     if (DEBUG_MOTOR)
+    {
       Serial.print("Motor");
-    Serial.print(mot);
-    Serial.print(" TotalMaxMoveTime");
-    Serial.println(MotorTotalMoveTime[mot]);
+      Serial.print(mot);
+      Serial.print(" TotalMaxMoveTime");
+      Serial.println(MotorTotalMoveTime[mot]);
+    }
   }
 
   // Determine dominant Axis  - start with Pan or motor 0
@@ -1540,11 +1543,12 @@ void synched3PtMove_max(float xtarget, float ytarget, float ztarget) //
   // End of Determine dominant Axix
   // create branch to eiether jog back max speed, or use local time if it is longer..
   if (DEBUG_MOTOR)
+  {
     Serial.print("LongestMoveTime");
-  Serial.println(LongestMoveTime);
-  if (DEBUG_MOTOR)
+    Serial.println(LongestMoveTime);
     Serial.print("DominantMotor");
-  Serial.println(DominantMotor);
+    Serial.println(DominantMotor);
+  }
 
   // For dominant axis, grab the key times for keyframing the other axis
 
@@ -1565,8 +1569,10 @@ void synched3PtMove_max(float xtarget, float ytarget, float ztarget) //
   }
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motorMoving byte=");
-  Serial.println(motorMoving);
+    Serial.println(motorMoving);
+  }
 }
 
 void synched3AxisMove_timed(float xtarget, float ytarget, float ztarget, float local_time, float local_ramp) //
@@ -1601,10 +1607,12 @@ void synched3AxisMove_timed(float xtarget, float ytarget, float ztarget, float l
       MotorTotalMoveTime[mot] += motors[mot].moveTime[seg];
     }
     if (DEBUG_MOTOR)
+    {
       Serial.print("Motor");
-    Serial.print(mot);
-    Serial.print(" TotalMaxMoveTime");
-    Serial.println(MotorTotalMoveTime[mot]);
+      Serial.print(mot);
+      Serial.print(" TotalMaxMoveTime");
+      Serial.println(MotorTotalMoveTime[mot]);
+    }
   }
 
   // Determine dominant Axis  - start with Pan or motor 0
@@ -1625,11 +1633,13 @@ void synched3AxisMove_timed(float xtarget, float ytarget, float ztarget, float l
   // End of Determine dominant Axix
   // create branch to eiether jog back max speed, or use local time if it is longer..
   if (DEBUG_MOTOR)
+  {
     Serial.print("LongestMoveTime");
-  Serial.println(LongestMoveTime);
-  if (DEBUG_MOTOR)
+    Serial.println(LongestMoveTime);
+
     Serial.print("DominantMotor");
-  Serial.println(DominantMotor);
+    Serial.println(DominantMotor);
+  }
 
   // For dominant axis, grab the key times for keyframing the other axis
 
@@ -1672,8 +1682,10 @@ void synched3AxisMove_timed(float xtarget, float ytarget, float ztarget, float l
   }
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motorMoving byte=");
-  Serial.println(motorMoving);
+    Serial.println(motorMoving);
+  }
 }
 
 void calculatePointToPoint_move(int motorIndex)

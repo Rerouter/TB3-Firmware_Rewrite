@@ -27,7 +27,7 @@ NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 // Global Parameters
 const uint8_t SETUPMENU = 7;
 const bool DEBUG = 0;       //
-const bool DEBUG_MOTOR = 0; //
+const bool DEBUG_MOTOR = 1; //
 const bool DEBUG_PANO = 0;
 const bool DEBUG_GOTO = 0;
 const uint8_t MAX_MOVE_POINTS = 3;
@@ -136,33 +136,30 @@ We can power up and power down the Pan Tilt motors together.  We can power up an
 */
 
 // CVariables that are set during the Setup Menu store these in EEPROM
-uint8_t POWERSAVE_PT;  // 1=None - always on  2 - low   3=standard    4=High
-uint8_t POWERSAVE_AUX; // 1=None - always on  2 - low   3=standard    4=High
+PowerSave POWERSAVE_PT;  // 1=None - always on  2 - low   3=standard    4=High
+PowerSave POWERSAVE_AUX; // 1=None - always on  2 - low   3=standard    4=High
 boolean AUX_ON;                // 1=Aux Enabled, 0=Aux disabled
+boolean AUX_REV;                     // 1=Aux Enabled, 0=Aux disabled
 boolean PAUSE_ENABLED;         // 1=Pause Enabled, 0=Pause disabled
 boolean REVERSE_PROG_ORDER; // Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
 boolean MOVE_REVERSED_FOR_RUN = 0;
 uint8_t LCD_BRIGHTNESS_DURING_RUN; // 0 is off 8 is max
 uint16_t AUX_MAX_JOG_STEPS_PER_SEC; // value x 1000  20 is the top or 20000 steps per second.
-boolean AUX_REV;                           // 1=Aux Enabled, 0=Aux disabled
 
 // control variable, no need to store in EEPROM - default and setup during shot
 unsigned int progstep = 0;           // used to define case for main loop
 boolean progstep_forward_dir = true; // boolean to define direction of menu travel to allow for easy skipping of menus
-int8_t progtype = 0;           // updownmenu selection
-int8_t inprogtype = 0;                  // updownmenu selection during shoot
+int8_t progtype = 0;                 // updownmenu selection
+int8_t inprogtype = 0;               // updownmenu selection during shoot
 
-boolean first_time = true;         // variable to help with LCD dispay variable that need to show one time
+boolean first_time = true;           // variable to help with LCD dispay variable that need to show one time
 
 unsigned int program_progress_2PT = 1; // Lead in, ramp, linear, etc for motor routine case statement
 unsigned int program_progress_3PT = 1; // phase 1, phase 2
 unsigned long interval_tm = 0;         // mc time to help with interval comparison
 unsigned long interval_tm_last = 0;    // mc time to help with interval comparison
-unsigned int lcd_dim_tm = 10;
 unsigned long diplay_last_tm = 0;
 unsigned int prompt_time = 350; // in ms for delays of instructions
-// unsigned int  prompt_time=350; // for faster debugging
-int prompt_val;
 int reviewprog = 1;
 
 unsigned long start_delay_tm = 0; // ms timestamp to help with delay comparison
@@ -175,18 +172,16 @@ int joy_x_axis;
 int joy_y_axis;
 int accel_x_axis;
 
+unsigned int joy_y_lock_count = 0;
+unsigned int joy_x_lock_count = 0;
+
+ButtonState z_button = ButtonState::Released;
+ButtonState c_button = ButtonState::Released;
+
 int PanStepCount;
 int TiltStepCount;
 
-boolean z_button = false;
-boolean c_button = false;
-unsigned int joy_y_lock_count = 0;
-unsigned int joy_x_lock_count = 0;
 int prev_accel_x_reading = 0;
-int CZ_Button_Read_Count = 0;
-boolean CZ_Released = true;
-boolean C_Released = true;
-boolean Z_Released = true;
 long NClastread = 1000;         // control variable for NC reads cycles
 
 // Stepper Setup
@@ -740,10 +735,7 @@ void loop()
 
         focus_camera();  // for longer shot interval, wake up the camera
 
-        if (POWERSAVE_PT < 4)
-          enable_PT(); // don't power on for shot for high power saving
-        if (AUX_ON && POWERSAVE_AUX < 4)
-          enable_AUX(); // don't power on for shot for high power saving
+        UpdatePowerSaving(ProgramState::Moving);
       }
 
       // Step 1 if external triggering. This happens once per camera shot.
@@ -765,10 +757,7 @@ void loop()
         IO_Engaged = true;             //
         focus_camera(); // for longer shot interval, wake up the camera
 
-        if (POWERSAVE_PT < 4)
-          enable_PT(); // don't power on for shot for high power saving
-        if (AUX_ON && POWERSAVE_AUX < 4)
-          enable_AUX(); // don't power on for shot for high power saving
+        UpdatePowerSaving(ProgramState::Moving);
       }
 
       // End our prefire - check that we are in program active,shot cycle engaged, and prefire engaged and check against our prefire time
@@ -824,10 +813,7 @@ void loop()
         }
 
         // Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-        if (POWERSAVE_PT > 2)
-          disable_PT();
-        if (POWERSAVE_AUX > 2)
-          disable_AUX(); //
+        UpdatePowerSaving(ProgramState::ProgramActive);
 
         // Update display
         if (intval != EXTTRIG_INTVAL)
@@ -835,12 +821,8 @@ void loop()
 
         Shot_Sequence_Engaged = false; // Shot sequence engaged flag is is off - we are ready for our next
         Interrupt_Fire_Engaged = false;
-        // CZ_Button_Read_Count=0;
         // InterruptAction_Reset(); //enable the external interrupts to start a new shot
-        if (DEBUG)
-        {
-          Serial.println("EOL");
-        }
+        if (DEBUG) { Serial.println("EOL"); }
       }
 
       if (camera_moving_shots > 0 && camera_fired >= camera_total_shots)
@@ -848,10 +830,7 @@ void loop()
         lcd.empty();
         draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
         Program_Engaged = false;
-        if (POWERSAVE_PT > 1)
-          disable_PT(); //  low, standard, high, we power down at the end of program
-        if (POWERSAVE_AUX > 1)
-          disable_AUX(); // low, standard, high, we power down at the end of program
+        UpdatePowerSaving(ProgramState::Idle);
         delay(prompt_time);
         progstep = 90;
         first_time = true;
@@ -860,12 +839,14 @@ void loop()
       // This portion always runs in empty space of loop.
 
       UpdateNunChuck();
-      Check_Prog(); // look for button presses
-      // if (CZ_Button_Read_Count>10 && intval==EXTTRIG_INTVAL ) Interrupt_Fire_Engaged=true; // manual trigger
-      // if (PAUSE_ENABLED && CZ_Button_Read_Count>10 && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
-      if (PAUSE_ENABLED && CZ_Button_Read_Count > 25 && intval > 3 && !Shot_Sequence_Engaged && CZ_Released)
+      // if (c_button == ButtonState::Held && z_button== ButtonState::Held && intval==EXTTRIG_INTVAL ) Interrupt_Fire_Engaged=true; // manual trigger
+      // if (PAUSE_ENABLED && c_button == ButtonState::Held && z_button== ButtonState::Held && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
+      if (PAUSE_ENABLED && c_button == ButtonState::Held && z_button== ButtonState::Held && intval > 3 && !Shot_Sequence_Engaged)
+      {
+        c_button = ButtonState::ReadAgain;
+        z_button = ButtonState::ReadAgain;
         SMS_In_Shoot_Paused_Menu(); // jump into shooting menu
-
+      }
       break; // break 50
 
     case 51:
@@ -893,9 +874,11 @@ void loop()
         } while (motorMoving);
 
         stopISR1();
-
-        Serial.print("Video Runtime");
-        Serial.println(millis() - interval_tm);
+        if (DEBUG_PANO)
+        {
+          Serial.print("Video Runtime");
+          Serial.println(millis() - interval_tm);
+        }
 
         if (!motorMoving && (sequence_repeat_type == 0))
         { // new end condition for RUN CONTINOUS
@@ -903,11 +886,11 @@ void loop()
           lcd.empty();
           draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
           Program_Engaged = false;
+          UpdatePowerSaving(ProgramState::Idle);
           for (int i = 0; i < 30; i++)
           {
             UpdateNunChuck();
-            Check_Prog(); // look for button presses
-            if (PAUSE_ENABLED && CZ_Button_Read_Count > 25)
+            if (PAUSE_ENABLED && c_button == ButtonState::Held && z_button== ButtonState::Held)
             {
               break_continuous = true;
               lcd.empty();
@@ -915,9 +898,12 @@ void loop()
               lcd.at(2, 1, "Release Buttons");
               do
               {
-                UpdateNunChuck();
-
-              } while (c_button || z_button);
+                if ((millis() - NClastread) > 50)
+                {
+                  NClastread = millis();
+                  UpdateNunChuck();
+                }
+              } while (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed);
               progstep = 9;
             }
           }
@@ -930,10 +916,8 @@ void loop()
             if ((millis() - diplay_last_tm) > 1000)
               display_time(2, 1);
             UpdateNunChuck();
-            Check_Prog(); // look for long button press
-            // if (CZ_Button_Read_Count>20 && !Program_Engaged) {
+            // if (c_button == ButtonState::Held && z_button== ButtonState::Held && !Program_Engaged) {
             //	start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
-            //	CZ_Button_Read_Count=0; //reset this to zero to start
             // }
           }
 
@@ -948,10 +932,7 @@ void loop()
           lcd.empty();
           draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
           Program_Engaged = false;
-          if (POWERSAVE_PT > 1)
-            disable_PT(); //  low, standard, high, we power down at the end of program
-          if (POWERSAVE_AUX > 1)
-            disable_AUX(); // low, standard, high, we power down at the end of program
+          UpdatePowerSaving(ProgramState::Idle);
           progstep = 90;
           first_time = true;
           delay(100);
@@ -1000,15 +981,10 @@ void loop()
           lcd.empty();
           // draw(58,1,1);//lcd.at(1,1,"Program Complete");
           Program_Engaged = false;
-          if (POWERSAVE_PT > 1)
-            disable_PT(); //  low, standard, high, we power down at the end of program
-          if (POWERSAVE_AUX > 1)
-            disable_AUX(); // low, standard, high, we power down at the end of program
+          UpdatePowerSaving(ProgramState::Idle);
           delay(prompt_time);
           progstep = 90;
           first_time = true;
-          // delay(100);
-          // UpdateNunChuck();
         }
 
       } // End video loop for 3 Point moves
@@ -1027,22 +1003,25 @@ void loop()
           ext_shutter_open = true;
           shuttertimer_open = micros();
           if (DEBUG)
+          {
             Serial.print("shuttertimer_a=");
-          Serial.print(shuttertimer_open);
+            Serial.print(shuttertimer_open);
+          }
         }
         else if (state) // shutter closed - sense pin goes back high - stop the clock and report
         {
           ext_shutter_open = false;
           shuttertimer_close = micros(); // turn on the led / shutter
           ext_shutter_count++;
-          if (DEBUG)
+          if (DEBUG) {
             Serial.print(" ext_shutter_count=");
-          Serial.print(ext_shutter_count);
-          if (DEBUG)
+            Serial.print(ext_shutter_count);
+          
             Serial.print(" shuttertimer_b=");
-          Serial.print(shuttertimer_close);
-          Serial.print("diff=");
-          Serial.println(shuttertimer_close - shuttertimer_open);
+            Serial.print(shuttertimer_close);
+            Serial.print("diff=");
+            Serial.println(shuttertimer_close - shuttertimer_open);
+          }
         }
       }
       // end interrupt check and flagging
@@ -1051,7 +1030,6 @@ void loop()
 
       if ((Program_Engaged) && !(Shot_Sequence_Engaged) && !camera_shutter() && (ext_shutter_open))
       { // start a shot sequence flag
-
         Shot_Sequence_Engaged = true; //
       }
 
@@ -1098,22 +1076,14 @@ void loop()
             Serial.print(";");
           }
 
-          // Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-          if (POWERSAVE_PT > 2)
-            disable_PT();
-          if (POWERSAVE_AUX > 2)
-            disable_AUX(); //
+          UpdatePowerSaving(ProgramState::ProgramActive);
 
           // Update display
           display_status(); // update after shot complete to avoid issues with pausing
 
           Shot_Sequence_Engaged = false; // Shot sequence engaged flag is is off - we are ready for our next
-          CZ_Button_Read_Count = 0;
           // InterruptAction_Reset(); //enable the external interrupts to start a new shot
-          if (DEBUG)
-          {
-            Serial.println("EOL");
-          }
+          if (DEBUG) { Serial.println("EOL"); }
         }
       }
 
@@ -1122,20 +1092,19 @@ void loop()
         lcd.empty();
         draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
         Program_Engaged = false;
-        if (POWERSAVE_PT > 1)
-          disable_PT(); //  low, standard, high, we power down at the end of program
-        if (POWERSAVE_AUX > 1)
-          disable_AUX(); // low, standard, high, we power down at the end of program
+        UpdatePowerSaving(ProgramState::Idle);
         delay(prompt_time);
         progstep = 90;
         first_time = true;
       }
       UpdateNunChuck();
-      Check_Prog(); // look for button presses
-      if (CZ_Button_Read_Count > 10 && intval == EXTTRIG_INTVAL)
+      if (c_button == ButtonState::Held && z_button== ButtonState::Held && intval == EXTTRIG_INTVAL)
+      {
         Interrupt_Fire_Engaged = true; // manual trigger
-                                       // if (PAUSE_ENABLED && CZ_Button_Read_Count>20 && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
-
+        c_button = ButtonState::ReadAgain;
+        z_button = ButtonState::ReadAgain;
+        // if (PAUSE_ENABLED && c_button == ButtonState::Held && z_button== ButtonState::Held && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
+      }
       break; // break 52 - end external triggering loop
 
     case 90: // end of program - offer repeat and reverse options - check the nuncuck
@@ -1144,21 +1113,16 @@ void loop()
         lcd.empty();
         lcd.at(1, 4, "Repeat - C");
         lcd.at(2, 4, "Reverse - Z");
-        delay(prompt_time);
-        UpdateNunChuck();
         first_time = false;
-        delay(100);
       }
 
       // This portion always runs in empty space of loop.
-
-      UpdateNunChuck();
-      Check_Prog(); // look for button presses
-      // add error handling here to prevent accidental starts
-      // if (CZ_Button_Read_Count>25  && CZ_Released ) button_actions_end_of_program();  //Repeat or Reverses
-      button_actions_end_of_program();
-      // delay(1); //don't just hammer on this - query at regular interval
-
+      if ((millis() - NClastread) > 50)
+      {
+        NClastread = millis();
+        UpdateNunChuck();
+        button_actions_end_of_program();
+      }
       break; // break 90
 
     case 250: // loop for Pano
@@ -1182,9 +1146,7 @@ void loop()
         IO_Engaged = true;             //
         focus_camera(); // for longer shot interval, wake up the camera
 
-        // if (POWERSAVE_PT<4)   enable_PT();  //don't power on for shot for high power saving
-        // if (AUX_ON && POWERSAVE_AUX<4)   enable_AUX();  //don't power on for shot for high power saving
-        enable_PT();
+        UpdatePowerSaving(ProgramState::Moving);
       }
 
       // End our prefire - check that we are in program active,shot cycle engaged, and prefire engaged and check against our prefire time
@@ -1230,9 +1192,11 @@ void loop()
           Serial.print(millis() - interval_tm);
           Serial.print(";");
         }
-        if (DEBUG_PANO)
+        if (DEBUG_PANO) 
+        {
           Serial.print("progtype ");
-        Serial.println(progtype);
+          Serial.println(progtype);
+        }
         if (progtype == PANOGIGA) // regular pano
         {
           if (P2PType)
@@ -1247,8 +1211,7 @@ void loop()
 
         else if (progtype == PORTRAITPANO) // PORTRAITPANO method array load
         {
-          if (DEBUG_PANO)
-            Serial.print("entered PORTRAITPANO loop");
+          if (DEBUG_PANO) { Serial.print("entered PORTRAITPANO loop"); }
           move_motors_accel_array();
           delay(PanoPostMoveDelay);
         }
@@ -1262,25 +1225,21 @@ void loop()
         }
 
         // Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-        // if (POWERSAVE_PT>2)   disable_PT();
-        // if (POWERSAVE_AUX>2)   disable_AUX();  //
+        // if (POWERSAVE_PT >= PowerSave::ShootAccuracy)   disable_PT();
+        // if (POWERSAVE_AUX >= PowerSave::ShootAccuracy)   disable_AUX();  //
 
         //
 
         if (P2PType == false)
         {
-          Serial.println("finished basic move");
+          if (DEBUG) { Serial.println("finished basic move"); }
           if (intval != EXTTRIG_INTVAL)
             display_status(); // update after shot complete to avoid issues with pausing
           Move_Engaged = false;
           Shot_Sequence_Engaged = false; // Shot sequence engaged flag is is off - we are ready for our next
           Interrupt_Fire_Engaged = false;
-          CZ_Button_Read_Count = 0;
           // InterruptAction_Reset(); //enable the external interrupts to start a new shot
-          if (DEBUG)
-          {
-            Serial.println("EOL");
-          }
+          if (DEBUG) { Serial.println("EOL"); }
         }
 
       } // end test
@@ -1304,12 +1263,8 @@ void loop()
           Move_Engaged = false;
           Shot_Sequence_Engaged = false; // Shot sequence engaged flag is is off - we are ready for our next
           Interrupt_Fire_Engaged = false;
-          CZ_Button_Read_Count = 0;
           // InterruptAction_Reset(); //enable the external interrupts to start a new shot
-          if (DEBUG)
-          {
-            Serial.println("EOL");
-          }
+          if (DEBUG) { Serial.println("EOL"); }
         }
       }
 
@@ -1318,19 +1273,15 @@ void loop()
         lcd.empty();
         draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
         Program_Engaged = false;
-        if (POWERSAVE_PT > 1)
-          disable_PT(); //  low, standard, high, we power down at the end of program
-        if (POWERSAVE_AUX > 1)
-          disable_AUX(); // low, standard, high, we power down at the end of program
+        UpdatePowerSaving(ProgramState::Idle);
         delay(2000);
         progstep = 290;
         first_time = true;
       }
       // updateMotorVelocities();  //uncomment this for DF Loop
       UpdateNunChuck();
-      // Check_Prog(); //look for button presses
-      //  if (CZ_Button_Read_Count>10 && intval==EXTTRIG_INTVAL ) Interrupt_Fire_Engaged=true; // manual trigger
-      //  if (PAUSE_ENABLED && CZ_Button_Read_Count>20 && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
+      //  if (c_button == ButtonState::Held && z_button== ButtonState::Held && intval==EXTTRIG_INTVAL ) Interrupt_Fire_Engaged=true; // manual trigger
+      //  if (PAUSE_ENABLED && c_button == ButtonState::Held && z_button== ButtonState::Held && intval>3 && !Shot_Sequence_Engaged ) Pause_Prog(); //pause an SMS program
 
       break; // break 250
 
@@ -1341,12 +1292,30 @@ void loop()
         stopISR1();
         draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
         draw(59, 2, 1); // lcd.at(2,1," Repeat Press C");
-        delay(prompt_time);
-        UpdateNunChuck();
         first_time = false;
       }
-      UpdateNunChuck();
-      button_actions290(); // read buttons, look for c button press to start run
+
+      if ((millis() - NClastread) > 50)
+      {
+        NClastread = millis();
+        UpdateNunChuck();
+        if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
+        {
+          UpdatePowerSaving(ProgramState::ProgramActive);
+
+          // Program_Engaged=true;
+          camera_fired = 0;
+          current_steps.x = motors[0].position; // get our motor position variable synced
+          current_steps.y = motors[1].position; // get our motor position variable synced
+          // noInterrupts(); //turn this off while programming for now
+          lcd.bright(100);
+          if (progtype == PANOGIGA)
+            progstep = 206; //  move to the main program at the interval setting - UD050715
+          else if (progtype == PORTRAITPANO)
+            progstep = 216; //  move to the main program at the interval setting UD050715
+          first_time = true;
+        }
+      }
       break;               // break 90
 
     } // switch

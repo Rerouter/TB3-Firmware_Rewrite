@@ -9,11 +9,8 @@ unsigned int check_version()
 
 boolean eeprom_saved()
 {
-
   // read eeprom saved status
-
   byte saved = EEPROM.read(0);
-
   // EEPROM memory is by default set to 1, so we
   // return zero if no data written data to eeprom
   return (!saved);
@@ -89,8 +86,8 @@ void set_defaults_in_ram()
   current_steps.z = 0.0;          //			Serial.println(current_steps.z);
   // progstep=0;//			Serial.println(progstep);
   // Program_Engaged=0;//			Serial.println(Program_Engaged);
-  // POWERSAVE_PT=3;//			Serial.println(POWERSAVE_PT);
-  // POWERSAVE_AUX=3;//			Serial.println(POWERSAVE_AUX);
+  // POWERSAVE_PT=PowerSave::ShootAccuracy;//			Serial.println(POWERSAVE_PT);
+  // POWERSAVE_AUX=PowerSave::ShootAccuracy;//			Serial.println(POWERSAVE_AUX);
   // AUX_ON=3;//			Serial.println(AUX_ON);
   // PAUSE_ENABLED=3;//			Serial.println(PAUSE_ENABLED);
   // LCD_BRIGHTNESS_DURING_RUN=3;//			Serial.println(LCD_BRIGHTNESS_DURING_RUN);
@@ -101,8 +98,8 @@ void set_defaults_in_ram()
 void set_defaults_in_setup()
 {
 
-  POWERSAVE_PT = 3;                  //			Serial.println(POWERSAVE_PT);
-  POWERSAVE_AUX = 3;                 //			Serial.println(POWERSAVE_AUX);
+  POWERSAVE_PT = PowerSave::ShootAccuracy;                  //			Serial.println(POWERSAVE_PT);
+  POWERSAVE_AUX = PowerSave::ShootAccuracy;                 //			Serial.println(POWERSAVE_AUX);
   AUX_ON = true;                        //			        Serial.println(AUX_ON);
   PAUSE_ENABLED = false;                 //			Serial.println(PAUSE_ENABLED);   We set this to be on for beta testing only
   LCD_BRIGHTNESS_DURING_RUN = 3;     //		Serial.println(LCD_BRIGHTNESS_DURING_RUN);
@@ -218,13 +215,10 @@ void restore_from_eeprom_memory()
   eeprom_read(102, LCD_BRIGHTNESS_DURING_RUN);
   eeprom_read(104, AUX_MAX_JOG_STEPS_PER_SEC);
   eeprom_read(106, AUX_REV);
-
-  // delay(100);
 }
 
 void review_RAM_Contents()
 {
-
   Serial.println(build_version);
   Serial.println(first_time);
   Serial.println(intval);

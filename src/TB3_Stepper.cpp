@@ -51,18 +51,14 @@ int milli_delay;
 
 void init_steppers()
 {
-	// turn them off to start.
-	disable_PT();  //  low, standard, high, we power down at the end of program
-	disable_AUX(); // low, standard, high, we power down at the end of program
+	UpdatePowerSaving(ProgramState::Idle);
 	calculate_deltas();
 }
 
 void dda_move(long micro_delay)
 {
 	// enable our steppers
-	if (AUX_ON)
-		enable_AUX();
-	enable_PT();
+	UpdatePowerSaving(ProgramState::Moving);
 
 	// figure out our deltas
 	max_delta = max(delta_steps.x, delta_steps.y);
@@ -356,6 +352,16 @@ long calculate_feedrate_delay_2() // used for real time moves
 	// Serial.print("fr="); Serial.println(fr);
 	return (fr); // read about every 42 ms (24 times a second)
 }
+
+
+void UpdatePowerSaving(ProgramState input) {
+	if (POWERSAVE_PT <= input) { enable_PT(); }
+	else					   { disable_PT(); }
+
+	if (POWERSAVE_AUX <= input && AUX_ON) { enable_AUX(); }
+	else					    		  { disable_AUX(); }
+}
+
 
 void disable_PT()
 {

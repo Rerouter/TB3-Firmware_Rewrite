@@ -16,6 +16,8 @@ const boolean POWERDOWN_LV = false; // set this to cause the TB3 to power down b
 int batt_low_cnt = 0;
 int aux_dist;
 
+const boolean LCD_DEBUG = false;
+
 // variables for display of remaining time
 int timeh;
 int timem;
@@ -87,12 +89,7 @@ void Choose_Program()
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     
     first_time = false;
-    if (POWERSAVE_PT > 2)
-      disable_PT();
-    if (POWERSAVE_AUX > 2)
-      disable_AUX();
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+    UpdatePowerSaving(ProgramState::ProgramActive);
     NClastread = millis();
   }
 
@@ -105,103 +102,100 @@ void Choose_Program()
     progtype = updateProgType(progtype, joy_capture_y1(), 0, MENU_OPTIONS - 1, 1);
     if (lastprogtype != progtype) { first_time = true; }
 
-    button_actions_choose_program();
-  }
-}
+    if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released) {
+      c_button = ButtonState::ReadAgain;
+      z_button = ButtonState::ReadAgain;
+      lcd.empty();
+      if (progtype == REG2POINTMOVE)
+      { // new 2 point move
+        REVERSE_PROG_ORDER = false;
+        reset_prog = 1;
+        set_defaults_in_ram(); // put all basic parameters in RAM
+        lcd.empty();
+        draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
+        delay(prompt_time);
+        lcd.empty();
+        progstep_goto(1);
+      }
+      else if (progtype == REG3POINTMOVE)
+      { // new 3 point move
+        REVERSE_PROG_ORDER = false;
+        reset_prog = 1;
+        set_defaults_in_ram(); // put all basic parameters in RAM
+        lcd.empty();
+        draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
+        delay(prompt_time);
+        lcd.empty();
+        progstep_goto(101); // three point move
+      }
 
-void button_actions_choose_program()
-{
-  if (c_button && !z_button) {
-    lcd.empty();
-    if (progtype == REG2POINTMOVE)
-    { // new 2 point move
-      REVERSE_PROG_ORDER = false;
-      reset_prog = 1;
-      set_defaults_in_ram(); // put all basic parameters in RAM
-      lcd.empty();
-      draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
-      delay(prompt_time);
-      lcd.empty();
-      progstep_goto(1);
-    }
-    else if (progtype == REG3POINTMOVE)
-    { // new 3 point move
-      REVERSE_PROG_ORDER = false;
-      reset_prog = 1;
-      set_defaults_in_ram(); // put all basic parameters in RAM
-      lcd.empty();
-      draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
-      delay(prompt_time);
-      lcd.empty();
-      progstep_goto(101); // three point move
-    }
+      else if (progtype == DFSLAVE)
+      { // DFMode
+        lcd.empty();
+        if (PINOUT_VERSION == 4)
+          lcd.at(1, 1, "eMotimo TB3Black");
+        if (PINOUT_VERSION == 3)
+          lcd.at(1, 1, "eMotimoTB3Orange");
+        lcd.at(2, 1, "Dragonframe 1.26");
+        DFSetup();
+        DFloop();
+      }
+      else if (progtype == SETUPMENU)
+      { // setup menu
+        progstep_goto(901);
+      }
 
-    else if (progtype == DFSLAVE)
-    { // DFMode
-      lcd.empty();
-      if (PINOUT_VERSION == 4)
-        lcd.at(1, 1, "eMotimo TB3Black");
-      if (PINOUT_VERSION == 3)
-        lcd.at(1, 1, "eMotimoTB3Orange");
-      lcd.at(2, 1, "Dragonframe 1.26");
-      DFSetup();
-      DFloop();
-    }
-    else if (progtype == SETUPMENU)
-    { // setup menu
-      progstep_goto(901);
-    }
-
-    else if (progtype == REV2POINTMOVE)
-    { // reverse beta 2Pt
-      REVERSE_PROG_ORDER = true;
-      reset_prog = 1;
-      set_defaults_in_ram(); // put all basic paramters in RAM
-      lcd.empty();
-      draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
-      delay(prompt_time);
-      lcd.empty();
-      progstep_goto(1);
-    }
-    else if (progtype == REV3POINTMOVE)
-    { // new 3 point move reverse
-      REVERSE_PROG_ORDER = true;
-      reset_prog = 1;
-      set_defaults_in_ram(); // put all basic paramters in RAM
-      lcd.empty();
-      draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
-      delay(prompt_time);
-      lcd.empty();
-      progstep_goto(101); // three point move
-    }
-    else if (progtype == PANOGIGA)
-    { // Pano Beta
-      REVERSE_PROG_ORDER = false;
-      intval = 5;     // default this for static time selection
-      interval = 100; // default this to low value to insure we don't have left over values from old progam delaying shots.
-      progstep_goto(201);
-    }
-    else if (progtype == AUXDISTANCE)
-    { //
-      REVERSE_PROG_ORDER = false;
-      reset_prog = 1;
-      set_defaults_in_ram(); // put all basic paramters in RAM
-      lcd.empty();
-      draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
-      delay(prompt_time);
-      lcd.empty();
-      progstep_goto(301);
-    }
-    else if (progtype == PORTRAITPANO)
-    { // Pano Beta
-      REVERSE_PROG_ORDER = false;
-      reset_prog = 1;
-      set_defaults_in_ram(); // put all basic parameters in RAM
-      lcd.empty();
-      draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
-      delay(prompt_time);
-      lcd.empty();
-      progstep_goto(211);
+      else if (progtype == REV2POINTMOVE)
+      { // reverse beta 2Pt
+        REVERSE_PROG_ORDER = true;
+        reset_prog = 1;
+        set_defaults_in_ram(); // put all basic paramters in RAM
+        lcd.empty();
+        draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
+        delay(prompt_time);
+        lcd.empty();
+        progstep_goto(1);
+      }
+      else if (progtype == REV3POINTMOVE)
+      { // new 3 point move reverse
+        REVERSE_PROG_ORDER = true;
+        reset_prog = 1;
+        set_defaults_in_ram(); // put all basic paramters in RAM
+        lcd.empty();
+        draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
+        delay(prompt_time);
+        lcd.empty();
+        progstep_goto(101); // three point move
+      }
+      else if (progtype == PANOGIGA)
+      { // Pano Beta
+        REVERSE_PROG_ORDER = false;
+        intval = 5;     // default this for static time selection
+        interval = 100; // default this to low value to insure we don't have left over values from old progam delaying shots.
+        progstep_goto(201);
+      }
+      else if (progtype == AUXDISTANCE)
+      { //
+        REVERSE_PROG_ORDER = false;
+        reset_prog = 1;
+        set_defaults_in_ram(); // put all basic paramters in RAM
+        lcd.empty();
+        draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
+        delay(prompt_time);
+        lcd.empty();
+        progstep_goto(301);
+      }
+      else if (progtype == PORTRAITPANO)
+      { // Pano Beta
+        REVERSE_PROG_ORDER = false;
+        reset_prog = 1;
+        set_defaults_in_ram(); // put all basic parameters in RAM
+        lcd.empty();
+        draw(6, 1, 3); // lcd.at(1,3,"Params Reset");
+        delay(prompt_time);
+        lcd.empty();
+        progstep_goto(211);
+      }
     }
   }
 }
@@ -225,10 +219,6 @@ void Move_to_Startpoint()
     }
 
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // prev_joy_x_reading=0; //prevents buffer from moving axis from previous input
-    // prev_joy_y_reading=0;
     joy_x_axis = 0;
     joy_y_axis = 0;
     accel_x_axis = 0;
@@ -238,9 +228,11 @@ void Move_to_Startpoint()
 
   } // end of first time
 
-  // Velocity Engine update
-  if (!nextMoveLoaded)
+  // Velocity Engine update  
+
+  if (!nextMoveLoaded && ((millis() - NClastread) > 50))
   {
+    NClastread = millis();
     UpdateNunChuck();
     updateMotorVelocities2();
     button_actions_move_start(); // check buttons
@@ -250,12 +242,14 @@ void Move_to_Startpoint()
 
 void button_actions_move_start()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
+    c_button = ButtonState::ReadAgain;
+    z_button = ButtonState::ReadAgain;
     // this puts input to zero to allow a stop
-    joy_x_axis = 0.0;
-    joy_y_axis = 0.0;
-    accel_x_axis = 0.0;
+    joy_x_axis = 0;
+    joy_y_axis = 0;
+    accel_x_axis = 0;
 
     do // run this loop until the motors stop
     {
@@ -268,15 +262,17 @@ void button_actions_move_start()
 
     lcd.empty();
     set_position(0.0, 0.0, 0.0); // sets current steps to 0
-    if (DEBUG)
+    if (DEBUG) {
       Serial.print("current_steps_start.x: ");
-    Serial.println(current_steps.x);
-    if (DEBUG)
+      Serial.println(current_steps.x);
+
       Serial.print("current_steps_start.y: ");
-    Serial.println(current_steps.y);
-    if (DEBUG)
+      Serial.println(current_steps.y);
+
       Serial.print("current_steps_start.z: ");
-    Serial.println(current_steps.z);
+      Serial.println(current_steps.z);
+    }
+
     if (!REVERSE_PROG_ORDER)
       draw(9, 1, 3); // lcd.at(1,3,"Start Pt. Set");
     if (REVERSE_PROG_ORDER)
@@ -287,11 +283,10 @@ void button_actions_move_start()
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progtype = 0;
     progstep_goto(0);
-    delay(1);
   }
 }
 
@@ -321,24 +316,19 @@ void Move_to_Endpoint()
     joy_y_axis = 0;
     accel_x_axis = 0;
     startISR1();
-    enable_PT();
-    if (AUX_ON) {
-      enable_AUX(); //
-    }
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+    UpdatePowerSaving(ProgramState::Moving);
   }
   /*
           UpdateNunChuck();
-          applyjoymovebuffer_exponential();
           dda_move(feedrate_micros);
           button_actions_move_end();  //read buttons, look for home set on c
           delayMicroseconds(200);
           //delay(1);
   */
   // Velocity Engine update
-  if (!nextMoveLoaded)
+  if (!nextMoveLoaded && ((millis() - NClastread) > 50))
   {
+    NClastread = millis();
     UpdateNunChuck();
     updateMotorVelocities2();
     button_actions_move_end(); // check buttons
@@ -347,8 +337,10 @@ void Move_to_Endpoint()
 
 void button_actions_move_end()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
+    c_button = ButtonState::ReadAgain;
+    z_button = ButtonState::ReadAgain;
     // begin to stop the motors
     // this puts input to zero to allow a stop
     joy_x_axis = 0;
@@ -370,15 +362,16 @@ void button_actions_move_end()
     motors[1].position = long(current_steps.y);
     motors[2].position = long(current_steps.z);
 
-    if (DEBUG)
+    if (DEBUG) {
       Serial.print("motors[0].position:");
-    Serial.println(motors[0].position);
-    if (DEBUG)
+      Serial.println(motors[0].position);
+
       Serial.print("motors[1].position:");
-    Serial.println(motors[1].position);
-    if (DEBUG)
+      Serial.println(motors[1].position);
+
       Serial.print("motors[2].position:");
-    Serial.println(motors[2].position);
+      Serial.println(motors[2].position);
+    }
 
     motor_steps_pt[2][0] = current_steps.x; // now signed storage
     motor_steps_pt[2][1] = current_steps.y;
@@ -406,9 +399,8 @@ void button_actions_move_end()
     progstep_forward();
   }
 
-  if (z_button and !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
-    UpdateNunChuck();
     progstep_backward();
   }
 }
@@ -452,8 +444,6 @@ void Move_to_Point_X(int Point)
       draw(3, 2, 1); // lcd.at(2,1,CZ1);
 
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     joy_x_axis = 0;
     joy_y_axis = 0;
     accel_x_axis = 0;
@@ -463,8 +453,9 @@ void Move_to_Point_X(int Point)
   }
 
   // Velocity Engine update
-  if (!nextMoveLoaded)
+  if (!nextMoveLoaded && ((millis() - NClastread) > 50))
   {
+    NClastread = millis();
     UpdateNunChuck();
     updateMotorVelocities2();
     button_actions_move_x(Point); // check buttons
@@ -473,13 +464,15 @@ void Move_to_Point_X(int Point)
 
 void button_actions_move_x(int Point)
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
+    c_button = ButtonState::ReadAgain;
+    z_button = ButtonState::ReadAgain;
     // begin to stop the motors
     // this puts input to zero to allow a stop
-    joy_x_axis = 0.0;
-    joy_y_axis = 0.0;
-    accel_x_axis = 0.0;
+    joy_x_axis = 0;
+    joy_y_axis = 0;
+    accel_x_axis = 0;
 
     do // run this loop until the motors stop
     {
@@ -549,12 +542,14 @@ void button_actions_move_x(int Point)
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
+    c_button = ButtonState::ReadAgain;
+    z_button = ButtonState::ReadAgain;
     // this puts input to zero to allow a stop
-    joy_x_axis = 0.0;
-    joy_y_axis = 0.0;
-    accel_x_axis = 0.0;
+    joy_x_axis = 0;
+    joy_y_axis = 0;
+    accel_x_axis = 0;
 
     do // run this loop until the motors stop
     {
@@ -564,8 +559,6 @@ void button_actions_move_x(int Point)
         updateMotorVelocities2();
       }
     } while (motorMoving);
-    delay(1);
-    UpdateNunChuck();
     progstep_backward();
   }
 }
@@ -583,7 +576,6 @@ void Set_Cam_Interval()
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
     DisplayInterval();
     first_time = false;
-    UpdateNunChuck();
   }
 
   if ((millis() - NClastread) > 50)
@@ -638,7 +630,7 @@ void DisplayInterval()
 
 void button_actions_intval(unsigned int intval)
 {
-  if (c_button && !z_button) // looking for c button press to set interval
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released) // looking for c button press to set interval
   {
     interval = (long)intval * 100; // tenths of a second to ms
     // camera_exp_tm=100;
@@ -655,12 +647,10 @@ void button_actions_intval(unsigned int intval)
     lcd.empty();
 
     draw(21, 1, 3); // lcd.at(1,3,"Interval Set"); // try this to push correct character
-    delay(prompt_time);
-    lcd.empty();
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
       progstep_backward();
   }
@@ -760,15 +750,14 @@ void Display_Duration()
 
 void button_actions_overaldur()
 {
-  if (c_button && !z_button) // looking for c button press
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released) // looking for c button press
   {
     lcd.empty();
     draw(35, 1, 3); // lcd.at(1,3,"Duration Set");
-    delay(prompt_time);
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progstep_backward();
   }
@@ -791,7 +780,6 @@ void Set_Static_Time()
       max_shutter = 1000; // pano mode - allows
     DisplayStatic_tm();
     first_time = false;
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -842,17 +830,14 @@ void DisplayStatic_tm()
 
 void button_actions_stat_time(unsigned int exposure)
 {
-  if (c_button && !z_button) // looking for c button press
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released) // looking for c button press
   {
     lcd.empty();
-
     draw(25, 1, 1); // lcd.at(1,1,"Static Time Set"); // try this to push correct character
-    delay(prompt_time);
-    lcd.empty();
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progstep_backward();
   }
@@ -876,7 +861,6 @@ void Set_Ramp()
     draw(3, 2, 1); // lcd.at(2,1,CZ1);
     DisplayRampval();
     first_time = false;
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -903,20 +887,14 @@ void DisplayRampval()
 
 void button_actions_rampval()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
-    if (intval == VIDEO_INTVAL)
-    {
-      delay(1);
-    }
-
     lcd.empty();
     draw(31, 1, 5); // lcd.at(1,5,"Ramp Set");
-    delay(prompt_time);
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progstep_backward();
   }
@@ -937,7 +915,6 @@ void Set_LeadIn_LeadOut()
     lcd.at(1, 9, lead_out);
     cursorpos = 1;
     DisplayLeadIn_LeadOut();
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -1015,18 +992,16 @@ void DisplayLeadIn_LeadOut()
 
 void button_actions_lead_in_out()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
     lcd.cursorOff();
     lcd.empty();
     draw(39, 1, 1); // lcd.at(1,1,"Lead Frames Set");
     Calculate_Shot();
-
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     lcd.cursorOff();
     progstep_backward();
@@ -1080,10 +1055,7 @@ void Calculate_Shot() // this used to reside in LeadInLeadout, but now pulled.
     review_RAM_Contents();
 
   // delay(prompt_time);
-  if (POWERSAVE_PT > 2)
-    disable_PT();
-  if (POWERSAVE_AUX > 2)
-    disable_AUX();
+  UpdatePowerSaving(ProgramState::ProgramActive);
   // end of code block pulled from LeadinLeadOut
 }
 
@@ -1187,14 +1159,13 @@ void DisplayReviewProg()
 
 void button_actions_review()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
     lcd.empty();
     MOVE_REVERSED_FOR_RUN = false;                           // Reset This
     start_delay_tm = ((millis() / 1000L) + start_delay_sec); // system seconds in the future - use this as big value to compare against
     draw(34, 2, 10);                                         // lcd.at(2,10,"H:MM:SS");
     lcd.at(1, 2, "Delaying Start");
-    CZ_Button_Read_Count = 0; // reset this to zero to start
 
     while (start_delay_tm > millis() / 1000L)
     {
@@ -1203,25 +1174,21 @@ void button_actions_review()
       if ((millis() - diplay_last_tm) > 1000)
         display_time(2, 1);
       UpdateNunChuck();
-      Check_Prog(); // look for long button press
-      if (CZ_Button_Read_Count > 20 && !Program_Engaged)
+      if (c_button >= ButtonState::Held && z_button == ButtonState::Held && !Program_Engaged)
       {
         start_delay_tm = ((millis() / 1000L) + 5); // start right away by lowering this to 5 seconds.
-        CZ_Button_Read_Count = 0;                  // reset this to zero to start
+        c_button = ButtonState::ReadAgain;
+        z_button = ButtonState::ReadAgain;
       }
     }
 
-    enable_PT();
-    if (AUX_ON)
-      enable_AUX(); //
-
     // draw(49,1,1);//lcd.at(1,1,"Program Running");
-    // delay(prompt_time/3);
 
     if (intval == EXTTRIG_INTVAL)
       lcd.at(2, 1, "Waiting for Man.");
 
     Program_Engaged = true;
+    UpdatePowerSaving(ProgramState::Moving);
     Interrupt_Fire_Engaged = true; // just to start off first shot immediately
     interval_tm = 0;               // set this to 0 to immediately trigger the first shot
     sequence_repeat_count = 0;     // this is zeroed out every time we start a new shot
@@ -1249,7 +1216,7 @@ void button_actions_review()
     lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progstep_backward();
   }
@@ -1260,20 +1227,20 @@ void progstep_forward()
   first_time = true;
   progstep_forward_dir = true;
   progstep++;
-  delay(100);
-  UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+  delay(prompt_time);
+  c_button = ButtonState::ReadAgain;
+  z_button = ButtonState::ReadAgain;
 }
 
 void progstep_backward()
 {
   first_time = true;
   progstep_forward_dir = false;
-  if (progstep > 0)
-    progstep--;
-  else
-    progstep = 0;
-  delay(100);
-  UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+  if (progstep > 0) progstep--;
+  else              progstep = 0;
+  delay(prompt_time);
+  c_button = ButtonState::ReadAgain;
+  z_button = ButtonState::ReadAgain;
 }
 
 void progstep_goto(unsigned int prgstp)
@@ -1281,19 +1248,17 @@ void progstep_goto(unsigned int prgstp)
   lcd.empty();
   first_time = true;
   progstep = prgstp;
-  delay(100);
-  UpdateNunChuck(); //  Use this to clear out any button registry from the last step
+  delay(prompt_time);
+  c_button = ButtonState::ReadAgain;
+  z_button = ButtonState::ReadAgain;
 }
 
 void button_actions_end_of_program()
 {                   // repeat - need to turn off the REVERSE_PROG_ORDER flag
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
     REVERSE_PROG_ORDER = false;
-    if (POWERSAVE_PT > 2)
-      disable_PT();
-    if (POWERSAVE_AUX > 2)
-      disable_AUX();
+    UpdatePowerSaving(ProgramState::ProgramActive);
     // Program_Engaged=true;
     camera_fired = 0;
     lcd.bright(8);
@@ -1314,13 +1279,10 @@ void button_actions_end_of_program()
     }
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     REVERSE_PROG_ORDER = true;
-    if (POWERSAVE_PT > 2)
-      disable_PT();
-    if (POWERSAVE_AUX > 2)
-      disable_AUX();
+    UpdatePowerSaving(ProgramState::ProgramActive);
     // Program_Engaged=true;
     camera_fired = 0;
     lcd.bright(8);
@@ -1361,7 +1323,6 @@ void Auto_Repeat_Video()
   // start_delay_tm=((millis()/1000L)+start_delay_sec); //system seconds in the future - use this as big value to compare against
   // draw(34,2,10);//lcd.at(2,10,"H:MM:SS");
   // lcd.at(1,2,"Delaying Start");
-  CZ_Button_Read_Count = 0; // reset this to zero to start
 
   /*
           while (start_delay_tm>millis()/1000L) {
@@ -1369,22 +1330,18 @@ void Auto_Repeat_Video()
             calc_time_remain_start_delay ();
             if ((millis()-diplay_last_tm) > 1000) display_time(2,1);
             UpdateNunChuck();
-            Check_Prog(); //look for long button press
-            if (CZ_Button_Read_Count>20 && !Program_Engaged) {
+            if (c_button == ButtonState::Held && z_button== ButtonState::Held && !Program_Engaged) {
                   start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
-                  CZ_Button_Read_Count=0; //reset this to zero to start
             }
 
           }
   */
 
-  enable_PT();
-  enable_AUX(); //
 
   draw(49, 1, 1); // lcd.at(1,1,"Program Running");
-  // delay(prompt_time/3);
 
   Program_Engaged = true;
+  UpdatePowerSaving(ProgramState::Moving);
   Interrupt_Fire_Engaged = true; // just to start off first shot immediately
 
   interval_tm = 0; // set this to 0 to immediately trigger the first shot
@@ -1418,7 +1375,7 @@ int joy_capture_y()
   if (abs(joy_y_axis) > 10)
   {
     auto scale = joy_y_lock_count / 6;
-    int output = -1 * map(joy_y_axis, -100, 100, -scale, scale);
+    int output = map(joy_y_axis, -100, 100, -scale, scale);
     if (output == 0) { output = (joy_y_axis > 0 ? -1 : 1); }
     return output;
   } 
@@ -1435,7 +1392,7 @@ int joy_capture_x() // captures joystick input and conditions it for UI
   if (abs(joy_x_axis) > 10)
   {
     auto scale = joy_x_lock_count / 6;
-    int output = -1 * map(joy_x_axis, -100, 100, -scale, scale);
+    int output = map(joy_x_axis, -100, 100, -scale, scale);
     if (output == 0) { output = (joy_x_axis > 0 ? -1 : 1); }
     return output;
   } 
@@ -1459,7 +1416,6 @@ void display_status()
     lcd.at(1, 5, "/"); // Add to one time display update
     lcd.at(2, 13, ".");
     lcd.at(2, 16, "v");
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     first_time = false;
   }
   // update upper left camera fired/total shots
@@ -1581,8 +1537,7 @@ void display_status()
       if (batt_low_cnt > 20)
       {
         // Stop the program and go to low power state
-        disable_PT();
-        disable_AUX();
+        UpdatePowerSaving(ProgramState::Idle);
         Program_Engaged = false;
         lcd.empty();
         draw(60, 1, 1); // lcd.at(1,1,"Battery too low");
@@ -1661,7 +1616,6 @@ void Enter_Aux_Endpoint()
 {
   if (first_time)
   {
-
     // routine for just moving to end point if nothing was stored.
     lcd.empty();
     lcd.at(1, 1, "Enter Aux End Pt");
@@ -1680,11 +1634,9 @@ void Enter_Aux_Endpoint()
     lcd.empty();
     lcd.at(1, 1, "AuxDist:   .  In");
     draw(3, 2, 1); // lcd.at(2,1,CZ1);
-    // delay(prompt_time)
     aux_dist = int((current_steps.z * 10) / STEPS_PER_INCH_AUX); // t
     DisplayAUX_Dist();
     first_time = false;
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -1742,19 +1694,18 @@ void DisplayAUX_Dist()
 
 void button_actions_Enter_Aux_Endpoint()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
-    lcd.empty();
     motor_steps_pt[0][2] = 0.0;                                                  // this sets the end point
     motor_steps_pt[1][2] = 0.0;                                                  // this sets the end point
     motor_steps_pt[2][2] = (float(aux_dist) * float(STEPS_PER_INCH_AUX)) / 10.0; // this sets the end point
-    Serial.println(motor_steps_pt[2][2]);
+    if (LCD_DEBUG) { Serial.println(motor_steps_pt[2][2]); }
+    lcd.empty();
     lcd.at(1, 2, "Aux End Pt. Set");
-    delay(prompt_time);
     progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progstep_backward();
   }

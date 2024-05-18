@@ -3,6 +3,27 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
+enum ButtonState {
+    ReadAgain = -1,
+    Released = 0,
+    Pressed = 1,
+    Held = 2,
+};
+
+enum PowerSave {
+    Always = 1,
+    Program = 2,
+    ShootAccuracy = 3,
+    ShootMove = 4,
+};
+
+enum ProgramState {
+    Idle = 1,
+    ProgramActive = 2,
+    Shooting = 3,
+    Moving = 4,
+};
+
 struct FloatPoint
 {
   float x;

@@ -6,14 +6,9 @@ void Setup_AUX_ON()
   {
     lcd.empty();
     draw(74, 1, 1); // lcd.at(1,1,"Aux Motor:");
-    if (AUX_ON) { lcd.at(1, 12, "ON "); }
-    else        { lcd.at(1, 12, "OFF"); }
-
+    lcd.at(1, 12, AUX_ON ? "ON " : "OFF");
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    NClastread = millis();
   }
 
   if ((millis() - NClastread) > 50)
@@ -23,25 +18,19 @@ void Setup_AUX_ON()
 
     auto lastAUX_ON = AUX_ON;
     AUX_ON = updateProgType(AUX_ON, joy_capture_y1(), 0, 1, 1);
-    if (lastAUX_ON != AUX_ON) {
-      if (AUX_ON) { lcd.at(1, 12, "ON "); }
-      else        { lcd.at(1, 12, "OFF"); }
-    }
+    if (lastAUX_ON != AUX_ON) { first_time = true; }
 
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       eeprom_write(100, AUX_ON);
 
-      if (c_button)
+      if (c_button >= ButtonState::Pressed)
         progstep_forward();
       else
       {
         progtype = SETUPMENU;
         progstep_goto(0);
       }
-
-      delay(prompt_time); // Exit Delay
-      UpdateNunChuck(); // Clear the last button action
     }
   }
 }
@@ -52,18 +41,9 @@ void Setup_PAUSE_ENABLED()
   {
     lcd.empty();
     draw(62, 1, 1); // lcd.at(1,1,"Pause ")
-    if (PAUSE_ENABLED)
-    {
-      draw(67, 1, 8); // lcd.at(1,7,"Enabled")
-    }
-    else
-    {
-      draw(68, 1, 8); // lcd.at(1,7,"Disabled")
-    }
+    lcd.at(1, 7, PAUSE_ENABLED ? "Enabled " : "Disabled");
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -73,17 +53,15 @@ void Setup_PAUSE_ENABLED()
 
     auto lastPAUSE_ENABLED = PAUSE_ENABLED;
     PAUSE_ENABLED = updateProgType(PAUSE_ENABLED, joy_capture_y1(), 0, 1, 1);
-    if (lastPAUSE_ENABLED != PAUSE_ENABLED) {first_time = true;}
+    if (lastPAUSE_ENABLED != PAUSE_ENABLED) { first_time = true; }
   
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       eeprom_write(101, PAUSE_ENABLED);
-      if (c_button)
+      if (c_button >= ButtonState::Pressed)
         progstep_forward();
       else
         progstep_backward();
-      delay(prompt_time);
-      UpdateNunChuck();
     }
   }
 }
@@ -94,25 +72,24 @@ void Setup_POWERSAVE_PT()
   {
     lcd.empty();
     lcd.at(1, 1, "PT Motors on");
-    switch(POWERSAVE_PT) {
-      case 1:
+    switch(POWERSAVE_PT)
+    {
+      case PowerSave::Always:
         draw(70, 2, 1); // lcd.at(2,1,"Always");
         break;
-      case 2:
+      case PowerSave::Program:
         draw(71, 2, 1); // lcd.at(2,1,"Program");
         break;
-      case 3:
+      case PowerSave::ShootAccuracy:
         draw(72, 2, 1); // lcd.at(2,1,"Shoot (accuracy)");
         break;
-      case 4:
+      case PowerSave::ShootMove:
         draw(73, 2, 1); // lcd.at(2,1,"Shoot (pwr save)");
         break;
-    }      
+    }
       
     // lcd.at(2,12,"C-Set");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -124,16 +101,14 @@ void Setup_POWERSAVE_PT()
     POWERSAVE_PT = updateProgType(POWERSAVE_PT, joy_capture_y1(), 1, 4, 1);
     if (lastPOWERSAVE_PT != POWERSAVE_PT) {first_time = true;}
 
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       eeprom_write(96, POWERSAVE_PT);
       progtype = 0;
-      if (c_button)
+      if (c_button >= ButtonState::Pressed)
         progstep_forward();
       else
         progstep_backward();
-      delay(prompt_time);
-      UpdateNunChuck();
     }
   }  
 }
@@ -147,24 +122,22 @@ void Setup_POWERSAVE_AUX()
 
     switch (POWERSAVE_AUX)
     {
-    case 1:
+    case PowerSave::Always:
       draw(70, 2, 1); // lcd.at(2,1,"Always");
       break;
-    case 2:
+    case PowerSave::Program:
       draw(71, 2, 1); // lcd.at(2,1,"Program");
       break;
-    case 3:
+    case PowerSave::ShootAccuracy:
       draw(72, 2, 1); // lcd.at(2,1,"Shoot (accuracy)");
       break;
-    case 4:
+    case PowerSave::ShootMove:
       draw(73, 2, 1); // lcd.at(2,1,"Shoot (pwr save)");
       break;
     }
 
     // lcd.at(2,12,"C-Set");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -176,16 +149,14 @@ void Setup_POWERSAVE_AUX()
     POWERSAVE_AUX = updateProgType(POWERSAVE_AUX, joy_capture_y1(), 1, 4, 1);
     if (lastPOWERSAVE_AUX != POWERSAVE_AUX) {first_time = true;}
 
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       eeprom_write(98, POWERSAVE_AUX);
       progtype = 0;
-      if (c_button)
+      if (c_button >= ButtonState::Pressed)
         progstep_forward();
       else
         progstep_backward();
-      delay(prompt_time);
-      UpdateNunChuck();
     }
   }
 }
@@ -200,8 +171,6 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     lcd.at(1, 15, LCD_BRIGHTNESS_DURING_RUN);
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -211,21 +180,19 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
 
     auto lastLCD_BRIGHTNESS_DURING_RUN = LCD_BRIGHTNESS_DURING_RUN;
     LCD_BRIGHTNESS_DURING_RUN = updateProgType(LCD_BRIGHTNESS_DURING_RUN, joy_capture_y1(), 1, 8, 1);
-    if (lastLCD_BRIGHTNESS_DURING_RUN != LCD_BRIGHTNESS_DURING_RUN) {first_time = true;}
+    if (lastLCD_BRIGHTNESS_DURING_RUN != LCD_BRIGHTNESS_DURING_RUN) { first_time = true; }
 
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       eeprom_write(102, LCD_BRIGHTNESS_DURING_RUN);
       progtype = 0;
       // lcd.empty();
       // lcd.at(1,1,"Return Main Menu");
       lcd.bright(4);
-      if (c_button)
+      if (c_button >= ButtonState::Pressed)
         progstep_forward();
       else
         progstep_backward();
-      delay(prompt_time);
-      UpdateNunChuck();
     }
   }
 }
@@ -240,8 +207,6 @@ void Setup_Max_AUX_Motor_Speed()
     lcd.at(1, 12, AUX_MAX_JOG_STEPS_PER_SEC);
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -251,17 +216,15 @@ void Setup_Max_AUX_Motor_Speed()
 
     auto lastAUX_MAX_JOG_STEPS_PER_SEC = AUX_MAX_JOG_STEPS_PER_SEC;
     AUX_MAX_JOG_STEPS_PER_SEC = updateProgType(AUX_MAX_JOG_STEPS_PER_SEC, joy_capture_y1(), 2000, 20000, 500);
-    if (lastAUX_MAX_JOG_STEPS_PER_SEC != AUX_MAX_JOG_STEPS_PER_SEC) {first_time = true;}
+    if (lastAUX_MAX_JOG_STEPS_PER_SEC != AUX_MAX_JOG_STEPS_PER_SEC) { first_time = true; }
 
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       eeprom_write(104, AUX_MAX_JOG_STEPS_PER_SEC);
-      if (c_button)
+      if (c_button >= ButtonState::Pressed)
         progstep_forward();
       else
         progstep_backward();
-      delay(prompt_time);
-      UpdateNunChuck(); //  Use this to clear out any button registry from the last button
     }
   }
 }
@@ -272,15 +235,10 @@ void Setup_AUX_Motor_DIR()
   {
     lcd.empty();
     lcd.at(1, 1, "Aux Reversed:");
-    if (AUX_REV)
-      lcd.at(1, 14, "ON");
-    else
-      lcd.at(1, 14, "OFF");
+    lcd.at(1, 14, AUX_REV ? "ON " : "OFF");
       
     draw(65, 2, 1); // lcd.at(2,1,"UpDown  C-Select");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -290,21 +248,18 @@ void Setup_AUX_Motor_DIR()
 
     auto lastAUX_REV = AUX_REV;
     AUX_REV = updateProgType(AUX_REV, joy_capture_y1(), 0, 1, 1);
-    if (lastAUX_REV != AUX_REV) {first_time = true;}
+    if (lastAUX_REV != AUX_REV) { first_time = true; }
 
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       eeprom_write(106, AUX_REV);
       progtype = 0;
       lcd.empty();
       lcd.at(1, 1, "Return Main Menu");
-      if (c_button)
+      if (c_button >= ButtonState::Pressed)
         progstep_goto(0);
       else
         progstep_backward();
-      delay(prompt_time);
-      UpdateNunChuck(); //  Use this to clear out any button registry from the last button
-                            // progstep_forward();
     }
   }
 }
@@ -324,8 +279,6 @@ void Set_Shot_Repeat()
       lcd.at(2, 1, "Repeat Forward"); // not currently supported
     // lcd.at(2,12,"C-Set");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -337,21 +290,13 @@ void Set_Shot_Repeat()
     sequence_repeat_type = updateProgType(sequence_repeat_type, joy_capture_y1(), 0, 1, 1);
     if (lastsequence_repeat_type != sequence_repeat_type) {first_time = true;}
 
-    if (c_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
-      // eeprom_write(98, POWERSAVE_AUX);
-      // progtype=0;
-      // lcd.empty();
       progstep_forward();
     }
-    else if (z_button)
+    if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
     {
-      // eeprom_write(98, POWERSAVE_AUX);
-      // progtype=0;
-      // lcd.empty();
       progstep_backward();
     }
-    delay(prompt_time);
-    UpdateNunChuck();
   }
 }

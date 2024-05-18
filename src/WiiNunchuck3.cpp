@@ -344,7 +344,6 @@ int WiiNunchuck3::vibration()
 
 	if (DEBUG)
 	{
-		// Debugging
 		Serial.print("Ranges: ");
 		Serial.print(xdiff);
 		Serial.print("\t");
@@ -366,10 +365,12 @@ void WiiNunchuck3::calibrate()
 	centeredJoyX = joyx();
 	centeredJoyY = joyy();
 
-	Serial.print("Calibrated: ");
-	Serial.print(centeredJoyX);
-	Serial.print("/");
-	Serial.println(centeredJoyY);
+	if (DEBUG) {
+		Serial.print("Calibrated: ");
+		Serial.print(centeredJoyX);
+		Serial.print("/");
+		Serial.println(centeredJoyY);
+	}
 }
 
 int WiiNunchuck3::digitalx(int threshold)

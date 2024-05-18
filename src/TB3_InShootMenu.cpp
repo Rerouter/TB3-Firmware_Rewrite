@@ -1,7 +1,5 @@
 #include "TB3_InShootMenu.h"
 
-int Z_Button_Read_Count = 0;
-int C_Button_Read_Count = 0;
 unsigned int goto_shot = 0;
 uint32_t input_last_tm = 0;
 
@@ -15,49 +13,8 @@ const uint8_t INPROG_GOTO_FRAME = 3;  // go to frame
 const uint8_t INPROG_INTERVAL = 4;    // Set Interval
 const uint8_t INPROG_STOPMOTION = 99; // Manual Forward and Back
 
-void Check_Prog() // this is a routine for the button presses in the program
-{
-  if (c_button && z_button)
-  {
-    C_Button_Read_Count++;
-    Z_Button_Read_Count++;
-    CZ_Button_Read_Count++;
-
-    delay(10);
-    if ((millis() - input_last_tm) > 2000)
-    {
-      C_Button_Read_Count = 0;
-      Z_Button_Read_Count = 0;
-      CZ_Button_Read_Count = 0;
-      input_last_tm = millis();
-    }
-  }
-
-  if (c_button && !z_button)
-  {
-    C_Button_Read_Count++; // c button on
-    if ((millis() - input_last_tm) > 2000)
-    {
-      C_Button_Read_Count = 0;
-      input_last_tm = millis();
-    }
-  }
-
-  if (z_button && !c_button)  // this would send us back to step 5
-  {
-    Z_Button_Read_Count++; // z button only on
-    if ((millis() - input_last_tm) > 2000)
-    {
-      Z_Button_Read_Count = 0;
-      input_last_tm = millis();
-    }
-  }
-}
-
 /*
 void Program_Engaged_Toggle()    {  //used for pausing
-      CZ_Button_Read_Count=0;
-      CZ_Released=false; //to prevent entry into this method until CZ button release again
       Program_Engaged=!Program_Engaged; //toggle off the loop
 
 }
@@ -65,13 +22,8 @@ void Program_Engaged_Toggle()    {  //used for pausing
 
 void SMS_In_Shoot_Paused_Menu() // this runs once and is quick - not persistent
 {
-  CZ_Button_Read_Count = 0;
-  CZ_Released = false;     // to prevent entry into this method until CZ button release again
   Program_Engaged = false; // toggle off the loop
-  if (POWERSAVE_PT > 2)
-    disable_PT();
-  if (POWERSAVE_AUX > 2)
-    disable_AUX();
+  UpdatePowerSaving(ProgramState::ProgramActive);
   inprogtype = 0;      // default this to the first option, Resume
   progstep_goto(1001); // send us to a loop where we can select options
 }
@@ -80,10 +32,7 @@ void SMS_Resume() // this runs once and is quick - not persistent
 {
   lcd.empty();
   lcd.at(1, 1, "Resuming");
-  CZ_Button_Read_Count = 0;
-  CZ_Released = false;    // to prevent entry into this method until CZ button release again
   Program_Engaged = true; // toggle off the loop
-  delay(prompt_time);
   progstep_goto(50); // send us back to the main SMS Loop
 }
 
@@ -125,13 +74,8 @@ void InProg_Select_Option()
     }
     lcd.at(2, 1, "UpDown  C-Select");
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
     NClastread = millis();
-    if (POWERSAVE_PT > 2)
-      disable_PT();
-    if (POWERSAVE_AUX > 2)
-      disable_AUX();
+    UpdatePowerSaving(ProgramState::ProgramActive);
   } // end first time
 
   if ((millis() - NClastread) > 50)
@@ -154,16 +98,17 @@ void InProg_Select_Option()
     }
 
     inprogtype = updateProgType(inprogtype, joy_capture_y1(), 0, INPROG_OPTIONS - 1, 1);
-    if (CZ_Released)
+    if ((c_button == ButtonState::Released && z_button== ButtonState::Released))
       button_actions_InProg_Select_Option(); // don't react to buttons unless there has been a CZ release
-    delay(prompt_time);
     }
 }
 
 void button_actions_InProg_Select_Option()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
+    c_button = ButtonState::ReadAgain;
+    z_button = ButtonState::ReadAgain;
     lcd.empty();
     if (inprogtype == INPROG_RESUME)
     { // Resume (unpause)
@@ -172,8 +117,8 @@ void button_actions_InProg_Select_Option()
     else if (inprogtype == INPROG_RTS)
     { // Return to restart the shot  - send to review screen of relative move
       REVERSE_PROG_ORDER = false;
-      // if (POWERSAVE_PT>2)   disable_PT();
-      // if (POWERSAVE_AUX>2)   disable_AUX();
+      // if (POWERSAVE_PT >= PowerSave::ShootAccuracy)   disable_PT();
+      // if (POWERSAVE_AUX >= PowerSave::ShootAccuracy)   disable_AUX();
       // Program_Engaged=true;
       camera_fired = 0;
       lcd.bright(8);
@@ -198,8 +143,8 @@ void button_actions_InProg_Select_Option()
     else if (inprogtype == INPROG_GOTO_END)
     { // Go to end point - basically a reverse move setup from wherever we are.
       REVERSE_PROG_ORDER = true;
-      // if (POWERSAVE_PT>2)   disable_PT();
-      // if (POWERSAVE_AUX>2)   disable_AUX();
+      // if (POWERSAVE_PT >= PowerSave::ShootAccuracy)   disable_PT();
+      // if (POWERSAVE_AUX >= PowerSave::ShootAccuracy)   disable_AUX();
       // Program_Engaged=true;
       camera_fired = 0;
       lcd.bright(8);
@@ -253,11 +198,6 @@ void button_actions_InProg_Select_Option()
       }
       inprogtype = INPROG_RESUME;
     }
-  }
-
-  if (z_button && !c_button)
-  {
-    delay(1);
   }
 }
 

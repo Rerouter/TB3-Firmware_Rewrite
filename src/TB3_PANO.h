@@ -19,7 +19,6 @@ void move_motors_pano_accel();
 void move_motors_accel_array();
 void Move_to_Origin();
 void calc_pano_move();
-void button_actions290();
 
 #endif
 
@@ -29,8 +28,8 @@ extern boolean AUX_ON;
 extern NHDLCD9 lcd;
 extern unsigned int prompt_time;
 extern volatile boolean nextMoveLoaded;
-extern boolean c_button;
-extern boolean z_button;
+extern ButtonState c_button;
+extern ButtonState z_button;
 extern const bool DEBUG_PANO;
 extern long NClastread;
 extern unsigned int camera_total_shots;
@@ -50,9 +49,6 @@ extern const boolean P2PType;
 extern boolean Move_Engaged;
 extern float motor_steps_pt[3][3];
 extern FloatPoint current_steps;
-extern uint8_t POWERSAVE_PT;
-extern uint8_t POWERSAVE_AUX;
-extern int8_t progtype;
 
 extern const uint16_t PAN_MAX_JOG_STEPS_PER_SEC;
 extern const uint16_t TILT_MAX_JOG_STEPS_PER_SEC;
@@ -80,12 +76,11 @@ extern int joy_capture_y();
 extern void progstep_forward();
 extern void progstep_backward();
 extern void progstep_goto(unsigned int prgstp);
-extern void disable_AUX();
 extern void set_target(float x, float y, float z);
 extern void dda_move(long micro_delay);
 extern void setPulsesPerSecond(int motorIndex, uint16_t pulsesPerSecond);
 extern void setupMotorMove(int motorIndex, int32_t destination);
 extern void updateMotorVelocities();
-extern void disable_PT();
+extern void UpdatePowerSaving(ProgramState input);
 extern void display_status();
 extern int updateProgType(int current, int direction, int minOption, int maxOptions, int stepSize);

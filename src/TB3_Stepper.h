@@ -13,6 +13,7 @@ void calculate_deltas();
 long calculate_feedrate_delay_1();
 long calculate_feedrate_delay_video();
 long calculate_feedrate_delay_2();
+void UpdatePowerSaving(ProgramState input);
 void disable_PT();
 void disable_AUX();
 void enable_PT();
@@ -21,6 +22,8 @@ void enable_AUX();
 #endif
 
 extern boolean AUX_ON;
+extern PowerSave POWERSAVE_PT;
+extern PowerSave POWERSAVE_AUX;
 extern FloatPoint delta_steps;
 extern FloatPoint current_steps;
 extern FloatPoint target_steps;

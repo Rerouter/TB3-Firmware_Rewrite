@@ -12,32 +12,27 @@ void move_motors()
   if (camera_fired < keyframe[0][1])
   { // Leadin
     program_progress_2PT = 1;
-    if (DEBUG_MOTOR)
-      Serial.print("LeadIn ");
+    if (DEBUG_MOTOR) { Serial.print("LeadIn "); }
   }
   else if (camera_fired < keyframe[0][2])
   { // Rampup
     program_progress_2PT = 2;
-    if (DEBUG_MOTOR)
-      Serial.print("Rampup ");
+    if (DEBUG_MOTOR) { Serial.print("Rampup "); }
   }
   else if (camera_fired < keyframe[0][3])
   { // Linear
     program_progress_2PT = 3;
-    if (DEBUG_MOTOR)
-      Serial.print("Linear ");
+    if (DEBUG_MOTOR) { Serial.print("Linear "); }
   }
   else if (camera_fired < keyframe[0][4])
   { // RampDown
     program_progress_2PT = 4;
-    if (DEBUG_MOTOR)
-      Serial.print("RampDn ");
+    if (DEBUG_MOTOR) { Serial.print("RampDn "); }
   }
   else if (camera_fired < keyframe[0][5])
   { // Leadout
     program_progress_2PT = 5;
-    if (DEBUG_MOTOR)
-      Serial.print("LeadOut ");
+    if (DEBUG_MOTOR) { Serial.print("LeadOut "); }
   }
   else
   {
@@ -70,8 +65,10 @@ void move_motors()
       program_progress_3PT = 101;
       percent = 0.0;
       if (DEBUG_MOTOR)
+      {
         Serial.print("LeadIn;");
-      Serial.print(percent);
+        Serial.print(percent);
+      }
     }
 
     else if (camera_fired < keyframe[1][2])
@@ -79,16 +76,20 @@ void move_motors()
       program_progress_3PT = 102;
       percent = float(camera_fired - keyframe[1][1]) / float((keyframe[1][2]) - keyframe[1][1]);
       if (DEBUG_MOTOR)
+      {
         Serial.print("Leg 1;");
-      Serial.print(percent);
+        Serial.print(percent);
+      }
     }
     else if (camera_fired < keyframe[1][3])
     { // Second Leg
       program_progress_3PT = 103;
       percent = float(camera_fired - keyframe[1][2]) / float(keyframe[1][3] - keyframe[1][2]);
       if (DEBUG_MOTOR)
+      {
         Serial.print("Leg 2;");
-      Serial.print(percent);
+        Serial.print(percent);
+      }
     }
     // else if (camera_fired<keyframe[3]) {  //Third Leg
     //  program_progress_3PT=104;
@@ -100,21 +101,23 @@ void move_motors()
       program_progress_3PT = 105;
       percent = 0.0;
       if (DEBUG_MOTOR)
+      {
         Serial.print("LeadOT;");
-      Serial.print(percent);
+        Serial.print(percent);
+      }
     }
 
     else
     {
       program_progress_3PT = 109; // Finished
-      if (DEBUG_MOTOR)
+      if (DEBUG_MOTOR) {
         Serial.print("Finished");
-      Serial.print(percent);
+        Serial.print(percent);
+      }
       return;
     }
 
-    if (DEBUG_MOTOR)
-      Serial.print(";");
+    if (DEBUG_MOTOR) { Serial.print(";"); }
     // DONT FORGET TO UPDATE REAL TIME TESTS ON RT Page
 
     fp.x = motor_get_steps_3pt(0);
@@ -221,40 +224,34 @@ long motor_get_steps_2pt(int motor)
 
   case 1: // Lead In - 0 Steps
     steps = 0;
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 2: // RampUp
     steps = (float)((camera_fired - lead_in) * linear_steps_per_shot[motor] / rampval);
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 3:                                                                                                                      // Linear portion
     steps = (float)(motor_steps_pt[2][motor] - ramp_params_steps[motor] - cur_steps[motor]) / (keyframe[0][3] - camera_fired); //  Point 2 in the end point
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 4:                                                                                                 // RampDown
     steps = (float)((motor_steps_pt[2][motor] - cur_steps[motor]) * 2) / (keyframe[0][4] - camera_fired); // Point 2 in the end point for 2 point move
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 5: // Lead Out
     steps = 0;
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 9: // 5 - finished
     break;
   }
 
-  if (DEBUG_MOTOR)
-    Serial.print(";");
+  if (DEBUG_MOTOR) { Serial.print(";"); }
   return (steps);
 }
 
@@ -275,20 +272,17 @@ long motor_get_steps_3pt(int motor)
 
   case 101: // 3Point Move - Lead In
     steps = 0;
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 102: // 3Point Move - First Leg -
     steps = catmullrom(percent, motor_steps_pt[1][motor], 0.0, motor_steps_pt[1][motor], motor_steps_pt[2][motor]);
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 103: // 3Point Move - Second Leg
     steps = catmullrom(percent, 0.0, motor_steps_pt[1][motor], motor_steps_pt[2][motor], motor_steps_pt[1][motor]);
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
     // case 104: //3Point Move - Third Leg
@@ -299,8 +293,7 @@ long motor_get_steps_3pt(int motor)
 
   case 105:                   // 3Point Move - Lead Out
     steps = cur_steps[motor]; // this is not delta but relative to start.
-    if (DEBUG_MOTOR)
-      Serial.print(steps);
+    if (DEBUG_MOTOR) { Serial.print(steps); }
     break;
 
   case 109: // 109 - finished
@@ -308,8 +301,7 @@ long motor_get_steps_3pt(int motor)
     break;
   }
 
-  if (DEBUG)
-    Serial.print(";");
+  if (DEBUG_MOTOR) { Serial.print(";"); }
   return (steps);
 }
 
@@ -380,36 +372,39 @@ void go_to_origin_max_speed() // interrupt routine
 {
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motors[0].dest:");
-  Serial.println(motors[0].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].destination);
+
     Serial.print("motors[1].dest:");
-  Serial.println(motors[1].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].destination);
+
     Serial.print("motors[2].dest:");
-  Serial.println(motors[2].destination);
+    Serial.println(motors[2].destination);
+  }
 
   synched3PtMove_max(0.0, 0.0, 0.0);
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motors[0].position:");
-  Serial.println(motors[0].position);
-  if (DEBUG_MOTOR)
-    Serial.print("motors[1].position:");
-  Serial.println(motors[1].position);
-  if (DEBUG_MOTOR)
-    Serial.print("motors[2].position:");
-  Serial.println(motors[2].position);
+    Serial.println(motors[0].position);
 
-  if (DEBUG_MOTOR)
+    Serial.print("motors[1].position:");
+    Serial.println(motors[1].position);
+
+    Serial.print("motors[2].position:");
+    Serial.println(motors[2].position);
+
     Serial.print("motors[0].dest:");
-  Serial.println(motors[0].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].destination);
+
     Serial.print("motors[1].dest:");
-  Serial.println(motors[1].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].destination);
+
     Serial.print("motors[2].dest:");
-  Serial.println(motors[2].destination);
+    Serial.println(motors[2].destination);
+  }
 
   // bitSet(motorMoving, 0);
   // bitSet(motorMoving, 1);
@@ -423,66 +418,69 @@ void go_to_origin_max_speed() // interrupt routine
       updateMotorVelocities();
     }
   } while (motorMoving);
-  // delay(10000);
   stopISR1();
 
   // this is making sure position is keeping up and accurate with granular steps
   if (DEBUG_MOTOR)
+  {
     Serial.print("Mot 0 current steps after move:");
-  Serial.println(current_steps.x);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.x);
+
     Serial.print("Mot 1 current steps after move:");
-  Serial.println(current_steps.y);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.y);
+
     Serial.print("Mot 2 current steps after move:");
-  Serial.println(current_steps.z);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.z);
+
     Serial.print("motors[0].position:");
-  Serial.println(motors[0].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].position);
+
     Serial.print("motors[1].position:");
-  Serial.println(motors[1].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].position);
+
     Serial.print("motors[2].position:");
-  Serial.println(motors[2].position);
+    Serial.println(motors[2].position);
+  }
 }
 
 void go_to_origin_slow() // interrupt routine
 {
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motors[0].dest:");
-  Serial.println(motors[0].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].destination);
+
     Serial.print("motors[1].dest:");
-  Serial.println(motors[1].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].destination);
+
     Serial.print("motors[2].dest:");
-  Serial.println(motors[2].destination);
+    Serial.println(motors[2].destination);
+  }
 
   // synched3PtMove_timed(0.0, 0.0, 0.0,15.0,0.25);
   synched3PtMove_max(0.0, 0.0, 0.0);
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motors[0].position:");
-  Serial.println(motors[0].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].position);
+
     Serial.print("motors[1].position:");
-  Serial.println(motors[1].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].position);
+
     Serial.print("motors[2].position:");
-  Serial.println(motors[2].position);
+    Serial.println(motors[2].position);
 
-  if (DEBUG_MOTOR)
     Serial.print("motors[0].dest:");
-  Serial.println(motors[0].destination);
-  if (DEBUG_MOTOR)
-    Serial.print("motors[1].dest:");
-  Serial.println(motors[1].destination);
-  if (DEBUG_MOTOR)
-    Serial.print("motors[2].dest:");
-  Serial.println(motors[2].destination);
+    Serial.println(motors[0].destination);
 
+    Serial.print("motors[1].dest:");
+    Serial.println(motors[1].destination);
+
+    Serial.print("motors[2].dest:");
+    Serial.println(motors[2].destination);
+  }
   // bitSet(motorMoving, 0);
   // bitSet(motorMoving, 1);
   // bitSet(motorMoving, 2);
@@ -495,28 +493,29 @@ void go_to_origin_slow() // interrupt routine
       updateMotorVelocities();
     }
   } while (motorMoving);
-  // delay(10000);
   stopISR1();
 
   // this is making sure position is keeping up and accurate with granular steps
   if (DEBUG_MOTOR)
+  {
     Serial.print("Mot 0 current steps after move:");
-  Serial.println(current_steps.x);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.x);
+
     Serial.print("Mot 1 current steps after move:");
-  Serial.println(current_steps.y);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.y);
+
     Serial.print("Mot 2 current steps after move:");
-  Serial.println(current_steps.z);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.z);
+
     Serial.print("motors[0].position:");
-  Serial.println(motors[0].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].position);
+
     Serial.print("motors[1].position:");
-  Serial.println(motors[1].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].position);
+
     Serial.print("motors[2].position:");
-  Serial.println(motors[2].position);
+    Serial.println(motors[2].position);
+  }
 }
 
 void DisplayMove(int motorIndex) // ca
@@ -528,30 +527,32 @@ void DisplayMove(int motorIndex) // ca
   for (i = 0; i < 5; i++)
   {
     if (DEBUG_MOTOR)
+    {
       Serial.print("M");
-    Serial.print(motorIndex);
-    Serial.print("Seg:");
-    Serial.print(i);
-    if (DEBUG_MOTOR)
+      Serial.print(motorIndex);
+      Serial.print("Seg:");
+      Serial.print(i);
+
       Serial.print("T:");
-    Serial.print(motor->moveTime[i]);
-    Serial.print(",");
-    if (DEBUG_MOTOR)
+      Serial.print(motor->moveTime[i]);
+      Serial.print(",");
+
       Serial.print("P:");
-    Serial.print(motor->movePosition[i]);
-    Serial.print(",");
-    if (DEBUG_MOTOR)
+      Serial.print(motor->movePosition[i]);
+      Serial.print(",");
+
       Serial.print("V:");
-    Serial.print(motor->moveVelocity[i]);
-    Serial.print(",");
-    if (DEBUG_MOTOR)
+      Serial.print(motor->moveVelocity[i]);
+      Serial.print(",");
+
       Serial.print("A:");
-    Serial.print(motor->moveAcceleration[i]);
-    Serial.print(",");
-    if (DEBUG_MOTOR)
+      Serial.print(motor->moveAcceleration[i]);
+      Serial.print(",");
+
       Serial.print("Dest:");
-    Serial.print(motor->destination);
-    Serial.println(" ");
+      Serial.print(motor->destination);
+      Serial.println(" ");
+    }
   }
   // Serial.print("Tmax:");Serial.println(tmax);
   // Serial.print("Dmax:");Serial.println(dmax);
@@ -572,9 +573,10 @@ void go_to_start_old()
     MOVE_REVERSED_FOR_RUN = true;
     // first flip the stored variables to help with direction of the move
     if (DEBUG_MOTOR)
+    {
       Serial.print("entering rev loop of interest");
-    if (DEBUG_MOTOR)
       Serial.println(REVERSE_PROG_ORDER);
+    }
 
     // if we aren't at the end position, move there now
     //   FloatPoint fp;
@@ -598,7 +600,7 @@ void go_to_start_old()
     motors[1].position = long(current_steps.y);
     motors[2].position = long(current_steps.z);
 
-    if (DEBUG)
+    if (DEBUG_MOTOR)
     {
       Serial.print("midpoint_preflip");
       Serial.print(motor_steps_pt[1][0]);
@@ -612,7 +614,7 @@ void go_to_start_old()
     motor_steps_pt[1][1] = (motor_steps_pt[2][1] - motor_steps_pt[1][1]) * -1.0;
     motor_steps_pt[1][2] = (motor_steps_pt[2][2] - motor_steps_pt[1][2]) * -1.0;
 
-    if (DEBUG)
+    if (DEBUG_MOTOR)
     {
       Serial.print("endpoint_preflip");
       Serial.print(motor_steps_pt[2][0]);
@@ -625,7 +627,7 @@ void go_to_start_old()
     motor_steps_pt[2][0] *= -1.0;
     motor_steps_pt[2][1] *= -1.0;
     motor_steps_pt[2][2] *= -1.0;
-    if (DEBUG)
+    if (DEBUG_MOTOR)
     {
       Serial.print("endpoint_postflip");
       Serial.print(motor_steps_pt[2][0]);
@@ -727,15 +729,13 @@ void go_to_start_old()
   motors[1].position = current_steps.y;
   motors[2].position = current_steps.z;
 
-  enable_PT();
-  enable_AUX();
+  UpdatePowerSaving(ProgramState::Moving);
   go_to_origin_max_speed();
 }
 
 void go_to_start_new() // interrupt routine
 {
-  enable_PT();
-  enable_AUX();
+  UpdatePowerSaving(ProgramState::Moving);
   // Add Section to allow for reverse Stuff.
 
   // This is the first time we look at movement.  Here is where we need to update our positions to accomodate reverse programming.
@@ -744,13 +744,13 @@ void go_to_start_new() // interrupt routine
 
   if (REVERSE_PROG_ORDER && !MOVE_REVERSED_FOR_RUN)
   {
-
     MOVE_REVERSED_FOR_RUN = true;
     // first flip the stored variables to help with direction of the move
-    if (DEBUG)
+    if (DEBUG_MOTOR)
+    {
       Serial.print("entering rev loop");
-    if (DEBUG)
       Serial.println(REVERSE_PROG_ORDER);
+    }
 
     // if we aren't at the end position, move there now
     //   FloatPoint fp;
@@ -774,7 +774,6 @@ void go_to_start_new() // interrupt routine
         updateMotorVelocities();
       }
     } while (motorMoving);
-    // delay(10000);
     stopISR1();
 
     // Clean up positions so we don't drift
@@ -782,7 +781,7 @@ void go_to_start_new() // interrupt routine
     motors[1].position = long(current_steps.y);
     motors[2].position = long(current_steps.z);
 
-    if (DEBUG)
+    if (DEBUG_MOTOR)
     {
       Serial.print("midpoint_preflip:");
       Serial.print(motor_steps_pt[1][0]);
@@ -796,7 +795,7 @@ void go_to_start_new() // interrupt routine
     motor_steps_pt[1][1] = (motor_steps_pt[2][1] - motor_steps_pt[1][1]) * -1.0;
     motor_steps_pt[1][2] = (motor_steps_pt[2][2] - motor_steps_pt[1][2]) * -1.0;
 
-    if (DEBUG)
+    if (DEBUG_MOTOR)
     {
       Serial.print("endpoint_preflip:");
       Serial.print(motor_steps_pt[2][0]);
@@ -809,7 +808,7 @@ void go_to_start_new() // interrupt routine
     motor_steps_pt[2][0] *= -1.0;
     motor_steps_pt[2][1] *= -1.0;
     motor_steps_pt[2][2] *= -1.0;
-    if (DEBUG)
+    if (DEBUG_MOTOR)
     {
       Serial.print("endpoint_postflip:");
       Serial.print(motor_steps_pt[2][0]);
@@ -825,38 +824,34 @@ void go_to_start_new() // interrupt routine
   }
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motors[0].dest:");
-  Serial.println(motors[0].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].destination);
     Serial.print("motors[1].dest:");
-  Serial.println(motors[1].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].destination);
     Serial.print("motors[2].dest:");
-  Serial.println(motors[2].destination);
+    Serial.println(motors[2].destination);
+  }
 
   // synched3PtMove_timed(0.0, 0.0, 0.0,15.0,0.25);
   // need to turn on the motors
   synched3PtMove_max(0.0, 0.0, 0.0);
 
   if (DEBUG_MOTOR)
+  {
     Serial.print("motors[0].position:");
-  Serial.println(motors[0].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].position);
     Serial.print("motors[1].position:");
-  Serial.println(motors[1].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].position);
     Serial.print("motors[2].position:");
-  Serial.println(motors[2].position);
-
-  if (DEBUG_MOTOR)
+    Serial.println(motors[2].position);
     Serial.print("motors[0].dest:");
-  Serial.println(motors[0].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].destination);
     Serial.print("motors[1].dest:");
-  Serial.println(motors[1].destination);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].destination);
     Serial.print("motors[2].dest:");
-  Serial.println(motors[2].destination);
+    Serial.println(motors[2].destination);
+  }
 
   // bitSet(motorMoving, 0);
   // bitSet(motorMoving, 1);
@@ -871,28 +866,24 @@ void go_to_start_new() // interrupt routine
       updateMotorVelocities();
     }
   } while (motorMoving);
-  // delay(10000);
   stopISR1();
 
   // this is making sure position is keeping up and accurate with granular steps
   if (DEBUG_MOTOR)
+  {
     Serial.print("Mot 0 current steps after move:");
-  Serial.println(current_steps.x);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.x);
     Serial.print("Mot 1 current steps after move:");
-  Serial.println(current_steps.y);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.y);
     Serial.print("Mot 2 current steps after move:");
-  Serial.println(current_steps.z);
-  if (DEBUG_MOTOR)
+    Serial.println(current_steps.z);
     Serial.print("motors[0].position:");
-  Serial.println(motors[0].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[0].position);
     Serial.print("motors[1].position:");
-  Serial.println(motors[1].position);
-  if (DEBUG_MOTOR)
+    Serial.println(motors[1].position);
     Serial.print("motors[2].position:");
-  Serial.println(motors[2].position);
+    Serial.println(motors[2].position);
+  }
 
   // still missing the reverse, but this calcs for ramp are now in.
 
@@ -969,12 +960,11 @@ void go_to_start_new() // interrupt routine
         Serial.println(ramp_params_steps[i]);
       }
     }
-
   } // end of three point calcs
 
   // We don't know how log we will be waiting - go to powersave.
-  if (POWERSAVE_PT > 2 && (sequence_repeat_type != 0))
-    disable_PT(); // don't powersave for continuous
-  if (POWERSAVE_AUX > 2 && (sequence_repeat_type != 0))
-    disable_AUX(); // don't powersave for continuous
+  if (sequence_repeat_type)
+  {
+    UpdatePowerSaving(ProgramState::ProgramActive);
+  }
 }

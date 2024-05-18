@@ -53,15 +53,15 @@ void Set_angle_of_view()
     draw(78, 2, 1); // lcd.at(2,1,"Tilt AOV: ");
     lcd.at(2, 11, steps_to_deg_decimal(0));
     first_time = false;
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
 
     //   Velocity Engine update
     DFSetup(); // setup the ISR
   }
 
   // Velocity Engine update
-  if (!nextMoveLoaded)
+  if (!nextMoveLoaded && ((millis() - NClastread) > 50))
   {
+    NClastread = millis();
     UpdateNunChuck();
     updateMotorVelocities2();
 
@@ -80,9 +80,6 @@ void Define_Overlap_Percentage()
     draw(3, 2, 1);  // lcd.at(2,1,CZ1);
     Display_olpercentage();
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-                           // motor_steps_pt[2][0];
   }
 
   if ((millis() - NClastread) > 50)
@@ -108,7 +105,7 @@ void Display_olpercentage()
 
 void button_actions_olpercentage()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {                                        // perform all calcs based on Angle of view and percentage overlap
     Pan_AOV_steps = abs(current_steps.x);  // Serial.println(Pan_AOV_steps);
     Tilt_AOV_steps = abs(current_steps.y); // Serial.println(Tilt_AOV_steps);
@@ -126,11 +123,9 @@ void button_actions_olpercentage()
 
     lcd.empty();
     draw(80, 1, 3); // lcd.at(1,3,"Overlap Set");
-    delay(prompt_time);
-    progstep_forward();
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progstep_backward();
   }
@@ -146,7 +141,6 @@ void Set_PanoArrayType()
 
   if (first_time)
   {
-    // prompt_val=POWERSAVE_PT;
     lcd.empty();
     lcd.at(1, 2, "Set Array Type");
 
@@ -179,8 +173,6 @@ void Set_PanoArrayType()
     }
 
     first_time = false;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - NClastread) > 50)
@@ -192,7 +184,7 @@ void Set_PanoArrayType()
     PanoArrayType = updateProgType(PanoArrayType, joy_capture_y1(), 0, PanoArrayTypeOptions - 1, 1);
     if (lastPanoArrayType != PanoArrayType) { first_time = true; }
 
-    if (c_button || z_button)
+    if (c_button >= ButtonState::Pressed || z_button >= ButtonState::Pressed)
     {
       switch (PanoArrayType)
       {
@@ -233,20 +225,13 @@ void Set_PanoArrayType()
       total_pano_shots = total_shots_x * total_shots_y; 
       camera_total_shots = total_pano_shots + 1;        // set this to allow us to compare in main loops
 
-      if (c_button && !z_button)
+      if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
       {
-        // POWERSAVE_PT=prompt_val;
-        // eeprom_write(98, POWERSAVE_PT);
-        // progtype=0;
-        // delay(prompt_time);
         progstep_forward();
       }
 
-      if (z_button && !c_button)
+      if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
       {
-        // POWERSAVE_PT=prompt_val;
-        // eeprom_write(98, POWERSAVE_PT);
-        // progtype=0;
         progstep_backward();
       }
     }
@@ -286,14 +271,11 @@ void Pano_Review_Confirm()
     lcd.empty();
     draw(41, 1, 4); // lcd.at(1,4,"Review and");
     draw(42, 2, 2); // lcd.at(2,2,"Confirm Setting");
-    // delay(prompt_time);
     delay(prompt_time);
-    lcd.empty();
     first_time = false;
     diplay_last_tm = millis();
     Pano_DisplayReviewProg();
     reviewprog = 1;
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
   }
 
   if ((millis() - diplay_last_tm) > 1000)
@@ -324,7 +306,7 @@ void Pano_Review_Confirm()
 
 void pano_button_actions_review()
 {
-  if (c_button && !z_button)
+  if (c_button >= ButtonState::Pressed && z_button == ButtonState::Released)
   {
     lcd.empty();
 
@@ -335,8 +317,6 @@ void pano_button_actions_review()
       // delay (start_delay_sec*60L*1000L);
       lcd.empty();
     }
-
-    disable_AUX(); //
 
     draw(49, 1, 1); // lcd.at(1,1,"Program Running");
     delay(prompt_time);
@@ -369,7 +349,7 @@ void pano_button_actions_review()
     }
   }
 
-  if (z_button && !c_button)
+  if (z_button >= ButtonState::Pressed && c_button == ButtonState::Released)
   {
     progstep_backward();
   }
@@ -403,7 +383,7 @@ void Pano_DisplayReviewProg()
       draw(48, 2, 2); // lcd.at(2,2,"Press C Button");
       break;
     case 4: //
-      // lcd.empty();
+      lcd.empty();
       lcd.at(1, 1, "StartDly:    min");
       lcd.at(2, 2, "Press C Button");
 
@@ -532,13 +512,14 @@ void move_motors_pano_accel()
   FloatPoint fp;
 
   fp.x = motor_steps_pt[1][0] - step_per_pano_shot_x * index_x;
-  if (DEBUG_PANO)
-    Serial.print("fp.x;");
-  Serial.println(fp.x);
   fp.y = motor_steps_pt[1][1] - step_per_pano_shot_y * index_y;
-  if (DEBUG_PANO)
+  if (DEBUG_PANO) {
+    Serial.print("fp.x;");
+    Serial.println(fp.x);
+
     Serial.print("fp.y;");
-  Serial.println(fp.y);
+    Serial.println(fp.y);
+  }
 
   // set_target(fp.x,fp.y,0.0); //we are in incremental mode to start abs is false
   // dda_move(100);
@@ -603,14 +584,13 @@ void move_motors_accel_array()
     fp.y = float(steps_per_shot_max_y) * float(TopThird7by5[camera_fired][1]) * -1.0;
   }
 
-  // fp.x= motor_steps_pt[1][0]-step_per_pano_shot_x*index_x;
-  if (DEBUG_PANO)
+  if (DEBUG_PANO) {
     Serial.print("fp.x;");
-  Serial.println(fp.x);
-  // fp.y= motor_steps_pt[1][1]-step_per_pano_shot_y*index_y;
-  if (DEBUG_PANO)
+    Serial.println(fp.x);
+
     Serial.print("fp.y;");
-  Serial.println(fp.y);
+    Serial.println(fp.y);
+  }
 
   setPulsesPerSecond(0, 20000);
   setPulsesPerSecond(1, 20000);
@@ -671,29 +651,4 @@ void calc_pano_move() // pano - calculate other values
   camera_total_shots = total_pano_shots;                                   // set this to allow us to compare in main loops
   step_per_pano_shot_x = float((current_steps.x) / (total_shots_x - 1.0)); // Serial.print("step_per_pano_shot_x = ");Serial.println(step_per_pano_shot_x);
   step_per_pano_shot_y = float((current_steps.y) / (total_shots_y - 1.0)); // Serial.print("step_per_pano_shot_y = ");Serial.println(step_per_pano_shot_y);
-}
-
-void button_actions290()
-{                   // repeat
-  if (c_button && !z_button)
-  {
-    if (POWERSAVE_PT > 2)
-      disable_PT();
-    if (POWERSAVE_AUX > 2)
-      disable_AUX();
-    // Program_Engaged=true;
-    camera_fired = 0;
-    current_steps.x = motors[0].position; // get our motor position variable synced
-    current_steps.y = motors[1].position; // get our motor position variable synced
-    // noInterrupts(); //turn this off while programming for now
-    lcd.bright(100);
-    if (progtype == PANOGIGA)
-      progstep = 206; //  move to the main program at the interval setting - UD050715
-    else if (progtype == PORTRAITPANO)
-      progstep = 216; //  move to the main program at the interval setting UD050715
-    first_time = true;
-    delay(prompt_time);
-    UpdateNunChuck(); //  Use this to clear out any button registry from the last step
-    // lcd.bright(0); //run in dimmed mode
-  }
 }

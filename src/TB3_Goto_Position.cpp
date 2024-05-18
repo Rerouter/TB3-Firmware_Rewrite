@@ -25,8 +25,7 @@ void goto_position(int gotoshot_temp)
   // end reset the move
 
   // enable the motors
-  enable_PT();
-  enable_AUX();
+  UpdatePowerSaving(ProgramState::Moving);
 
   // start the for loop here;
   for (int i = 0; i < gotoshot_temp; i++)
@@ -44,32 +43,27 @@ void goto_position(int gotoshot_temp)
     if (camera_fired < keyframe[0][1])
     { // Leadin
       program_progress_2PT = 1;
-      if (DEBUG_GOTO)
-        Serial.print("LeadIn ");
+      if (DEBUG_GOTO) { Serial.print("LeadIn "); }
     }
     else if (camera_fired < keyframe[0][2])
     { // Rampup
       program_progress_2PT = 2;
-      if (DEBUG_GOTO)
-        Serial.print("Rampup ");
+      if (DEBUG_GOTO) { Serial.print("Rampup "); }
     }
     else if (camera_fired < keyframe[0][3])
     { // Linear
       program_progress_2PT = 3;
-      if (DEBUG_GOTO)
-        Serial.print("Linear ");
+      if (DEBUG_GOTO) { Serial.print("Linear "); }
     }
     else if (camera_fired < keyframe[0][4])
     { // RampDown
       program_progress_2PT = 4;
-      if (DEBUG_GOTO)
-        Serial.print("RampDn ");
+      if (DEBUG_GOTO) { Serial.print("RampDn "); }
     }
     else if (camera_fired < keyframe[0][5])
     { // Leadout
       program_progress_2PT = 5;
-      if (DEBUG_GOTO)
-        Serial.print("LeadOut ");
+      if (DEBUG_GOTO) { Serial.print("LeadOut "); }
     }
     else
     {
@@ -102,8 +96,10 @@ void goto_position(int gotoshot_temp)
         program_progress_3PT = 101;
         percent = 0.0;
         if (DEBUG_GOTO)
+        {
           Serial.print("LeadIn;");
-        Serial.print(percent);
+          Serial.print(percent);
+        }
       }
 
       else if (camera_fired < keyframe[1][2])
@@ -111,16 +107,20 @@ void goto_position(int gotoshot_temp)
         program_progress_3PT = 102;
         percent = float(camera_fired - keyframe[1][1]) / float((keyframe[1][2]) - keyframe[1][1]);
         if (DEBUG_GOTO)
+        {
           Serial.print("Leg 1;");
-        Serial.print(percent);
+          Serial.print(percent);
+        }
       }
       else if (camera_fired < keyframe[1][3])
       { // Second Leg
         program_progress_3PT = 103;
         percent = float(camera_fired - keyframe[1][2]) / float(keyframe[1][3] - keyframe[1][2]);
         if (DEBUG_GOTO)
+        {
           Serial.print("Leg 2;");
-        Serial.print(percent);
+          Serial.print(percent);
+        }
       }
       // else if (camera_fired<keyframe[3]) {  //Third Leg
       //  program_progress_3PT=104;
@@ -132,16 +132,20 @@ void goto_position(int gotoshot_temp)
         program_progress_3PT = 105;
         percent = 0.0;
         if (DEBUG_GOTO)
+        {
           Serial.print("LeadOT;");
-        Serial.print(percent);
+          Serial.print(percent);
+        }
       }
 
       else
       {
         program_progress_3PT = 109; // Finished
         if (DEBUG_GOTO)
+        {
           Serial.print("Finished");
-        Serial.print(percent);
+          Serial.print(percent);
+        }
         return;
       }
 
@@ -159,10 +163,7 @@ void goto_position(int gotoshot_temp)
       Serial.print("Shot ");
       Serial.print(camera_fired);
       Serial.print(";");
-    }
 
-    if (DEBUG_GOTO)
-    {
       Serial.print("B;");
       Serial.print(current_steps.x);
       Serial.print(";");
@@ -265,7 +266,6 @@ void goto_position(int gotoshot_temp)
       updateMotorVelocities();
     }
   } while (motorMoving);
-  // delay(10000);
   stopISR1();
 
   inprogtype = 0; // set this to resume

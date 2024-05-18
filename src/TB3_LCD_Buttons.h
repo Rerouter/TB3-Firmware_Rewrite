@@ -78,4 +78,3 @@ extern uint16_t STEPS_PER_INCH_AUX;
 extern const uint8_t SETUPMENU;
 
 extern void DFloop();
-extern void Check_Prog();

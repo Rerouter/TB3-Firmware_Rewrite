@@ -6,12 +6,82 @@ int joy_x_axis_Offset;
 int joy_x_axis_Threshold;
 int joy_y_axis_Offset;
 int joy_y_axis_Threshold;
-int accel_x_axis_Offset;
+int accel_x_axis_Offset = 512;
 int accel_x_axis_Threshold = 200;
 
 const uint8_t joy_deadband = 15;
 const uint8_t acc_deadband = 100;
 const uint8_t joy_lock_theshold = 83;
+
+uint32_t lastZChangeTime = 0;
+uint32_t lastCChangeTime = 0;
+const uint32_t debounceDelay = 50;  // Debounce time in milliseconds
+const uint32_t holdThreshold = 1000;  // Time in milliseconds to consider as held
+
+
+ButtonState UpdateCButton(boolean input, ButtonState state) {
+  uint32_t currentTime = millis();
+
+  // Check if state should change based on input and debounce
+  if (currentTime - lastCChangeTime > debounceDelay) {
+    switch (state) {
+        case ButtonState::ReadAgain:
+          if (!input) {
+              state = ButtonState::Released;
+              lastCChangeTime = currentTime;  // Reset timer at state change
+          }
+          break;
+        case ButtonState::Released:
+          if (input) {
+              state = ButtonState::Pressed;
+              lastCChangeTime = currentTime;  // Reset timer at state change
+          }
+          break;
+        case ButtonState::Pressed:
+        case ButtonState::Held:
+          if (!input) {
+              state = ButtonState::Released;
+              lastCChangeTime = currentTime;  // Reset timer at state change
+          } else if (currentTime - lastCChangeTime > holdThreshold) {
+              state = ButtonState::Held;  // Transition to Held state
+          }
+          break;
+    }
+  }
+  return state;
+}
+
+ButtonState UpdateZButton(boolean input, ButtonState state) {
+  uint32_t currentTime = millis();
+
+  // Check if state should change based on input and debounce
+  if (currentTime - lastZChangeTime > debounceDelay) {
+    switch (state) {
+      case ButtonState::ReadAgain:
+        if (!input) {
+            state = ButtonState::Released;
+            lastCChangeTime = currentTime;  // Reset timer at state change
+        }
+        break;
+      case ButtonState::Released:
+        if (input) {
+            state = ButtonState::Pressed;
+            lastZChangeTime = currentTime;  // Reset timer at state change
+        }
+        break;
+      case ButtonState::Pressed:
+      case ButtonState::Held:
+        if (!input) {
+            state = ButtonState::Released;
+            lastZChangeTime = currentTime;  // Reset timer at state change
+        } else if (currentTime - lastCChangeTime > holdThreshold) {
+            state = ButtonState::Held;  // Transition to Held state
+        }
+        break;
+    }
+  }
+  return state;
+}
 
 void calibrate_joystick(int tempx, int tempy)
 {
@@ -19,7 +89,6 @@ void calibrate_joystick(int tempx, int tempy)
 
   joy_x_axis_Offset = tempx;
   joy_y_axis_Offset = tempy;
-  accel_x_axis_Offset = 512;
   joy_x_axis_Threshold = 127 - abs(127 - joy_x_axis_Offset);
   joy_y_axis_Threshold = 127 - abs(127 - joy_y_axis_Offset);
 }
@@ -73,6 +142,11 @@ void NunChuckQuerywithEC() // error correction and reinit on disconnect  - takes
   }
 }
 
+inline int joystick_deadband(int joy_axis, int threshold) {
+  // If in the deadband, return 0, otherwise subtract the deadband from the value
+    return (abs(joy_axis) >= threshold) ? joy_axis + (joy_axis >= threshold ? -threshold : threshold) : 0;
+}
+
 inline int JoystickLockCounter(int lockCount, int joyAxisValue) {
     return (abs(joyAxisValue) > joy_lock_theshold) ? ((lockCount + 1 > 250) ? 250 : lockCount + 1) : 0;
 }
@@ -94,16 +168,11 @@ void UpdateNunChuck()
   joy_x_lock_count = JoystickLockCounter(joy_x_lock_count, joy_x_axis);
   joy_y_lock_count = JoystickLockCounter(joy_y_lock_count, joy_y_axis);
 
-  c_button = Nunchuck.cbutton();
-  z_button = Nunchuck.zbutton();
-
-  if (!c_button && !z_button) CZ_Released = true; // look for both release of a button to set this flag.
-  if (!c_button)               C_Released = true; // look for both release of a button to set this flag.
-  if (!z_button)               Z_Released = true; // look for both release of a button to set this flag.
+  c_button = UpdateCButton(Nunchuck.cbutton(), c_button);
+  z_button = UpdateZButton(Nunchuck.zbutton(), z_button);
 }
 
-void applyjoymovebuffer_exponential() // exponential stuff
-{
+void applyjoymovebuffer_exponential() { // exponential stuff
   // scale based on read frequency  base is 500 reads per second  - now 20 reads per second = 25x
   float joy_x = (long(joy_x_axis) * joy_x_axis * joy_x_axis) / 1200L;
   float joy_y = (long(joy_y_axis) * joy_y_axis * joy_y_axis) / 1200L;
@@ -165,8 +234,7 @@ void applyjoymovebuffer_exponential() // exponential stuff
   feedrate_micros = calculate_feedrate_delay_2();
 }
 
-void applyjoymovebuffer_linear()
-{
+void applyjoymovebuffer_linear() {
 
   // control max speeds of the axis
   joy_y_axis = map(joy_y_axis, -90, 90, -35, 35); //
@@ -204,21 +272,14 @@ void applyjoymovebuffer_linear()
   feedrate_micros = calculate_feedrate_delay_2();
 }
 
-void nc_sleep()
-{
+void nc_sleep() {
   // Disable motor if joystick movement exceeds 15 units in any direction
   bool isActive = abs(joy_x_axis) > 15 || abs(joy_y_axis) > 15;
-  digitalWrite(MOTOR_EN, !isActive ? HIGH : LOW);
-}
-
-inline int joystick_deadband(int joy_axis, int threshold) {
-  // If in the deadband, return 0, otherwise subtract the deadband from the value
-    return (abs(joy_axis) >= threshold) ? joy_axis + (joy_axis >= threshold ? -threshold : threshold) : 0;
+  digitalWrite(MOTOR_EN, isActive ? LOW : HIGH);
 }
 
 void updateMotorVelocities2() // Happens  20 times a second
 {
-
   // limit speeds
   float motormax0 = PAN_MAX_JOG_STEPS_PER_SEC / 20000.0;
   float motormax1 = TILT_MAX_JOG_STEPS_PER_SEC / 20000.0;
@@ -236,20 +297,14 @@ void updateMotorVelocities2() // Happens  20 times a second
   // could also make accel dynamic based on velocity - decelerate faster when going fast - have to make sure we don't create hyperbole
 
   // exponential curve
-  float joy_x = float(long(joy_x_axis) * joy_x_axis * joy_x_axis) / 10000.0;
-  float joy_y = float(long(joy_y_axis) * joy_y_axis * joy_y_axis) / 10000.0;
-  float accel_x = float(long(accel_x_axis) * accel_x_axis * accel_x_axis) / 10000.0;
+  float joy_x = (static_cast<float>(joy_x_axis) * joy_x_axis * joy_x_axis) / 10000.0;
+  float joy_y = (static_cast<float>(joy_y_axis) * joy_y_axis * joy_y_axis) / 10000.0;
+  float accel_x = (static_cast<float>(accel_x_axis) * accel_x_axis * accel_x_axis)  / 10000.0;
 
   // record last speed for compare, multiply by direction to get signed value
-  float signedlastMotorMoveSpeed0 = motors[0].nextMotorMoveSpeed;
-  if (!motors[0].dir)
-    signedlastMotorMoveSpeed0 *= -1.0; // 0 is reverse
-  float signedlastMotorMoveSpeed1 = motors[1].nextMotorMoveSpeed;
-  if (!motors[1].dir)
-    signedlastMotorMoveSpeed1 *= -1.0;
-  float signedlastMotorMoveSpeed2 = motors[2].nextMotorMoveSpeed;
-  if (!motors[2].dir)
-    signedlastMotorMoveSpeed2 *= -1.0;
+  float signedlastMotorMoveSpeed0 = motors[0].dir ? motors[0].nextMotorMoveSpeed : -motors[0].nextMotorMoveSpeed;
+  float signedlastMotorMoveSpeed1 = motors[1].dir ? motors[1].nextMotorMoveSpeed : -motors[1].nextMotorMoveSpeed;
+  float signedlastMotorMoveSpeed2 = motors[2].dir ? motors[2].nextMotorMoveSpeed : -motors[2].nextMotorMoveSpeed;
 
   // set the accumulator value for the 1/20th second move - this is our accumulator value
   float signedMotorMoveSpeedTarget0 = joy_x * 655.3 * motormax0;
@@ -295,6 +350,10 @@ void updateMotorVelocities2() // Happens  20 times a second
       signedMotorMoveSpeedTarget2 = signedlastMotorMoveSpeed2 - accelmax2;
     }
   }
+  digitalWrite(MOTOR0_STEP, !digitalRead(MOTOR0_STEP));
+  lcd.at(1,1,digitalRead(MOTOR_EN));
+  lcd.at(2,1,signedMotorMoveSpeedTarget0);
+  lcd.at(2,12,signedMotorMoveSpeedTarget1);
 
   motors[0].nextMotorMoveSpeed = abs(signedMotorMoveSpeedTarget0); // top is 65535
   motors[1].nextMotorMoveSpeed = abs(signedMotorMoveSpeedTarget1); // top is 65535
@@ -306,17 +365,11 @@ void updateMotorVelocities2() // Happens  20 times a second
       bitSet(motorMoving, mot);
     else
       bitClear(motorMoving, mot);
-    // Serial.print("motorMoving:");Serial.println(motorMoving);
   }
 
   motors[0].dir = (signedMotorMoveSpeedTarget0 > 0) ? 1 : 0;
   motors[1].dir = (signedMotorMoveSpeedTarget1 > 0) ? 1 : 0;
   motors[2].dir = (signedMotorMoveSpeedTarget2 > 0) ? 1 : 0;
-
-  // don't write digital pins here - allow interrupt loop to do it
-  // digitalWrite(motors[0].dirPin, motors[0].dir);
-  // digitalWrite(motors[1].dirPin, motors[1].dir);
-  // digitalWrite(motors[2].dirPin, motors[2].dir);
 
   *motorAccumulator[0] = 65535;
   *motorAccumulator[1] = 65535;
